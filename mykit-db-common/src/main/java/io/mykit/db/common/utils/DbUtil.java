@@ -4,6 +4,7 @@ import org.apache.commons.dbutils.QueryRunner;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.HashMap;
 
 /**
@@ -16,9 +17,13 @@ public class DbUtil {
     public static QueryRunner qr = new QueryRunner();
 
     /***
-    * @Description: 以sql为键，
+    * @Description: 以sql为键，psm为值
     */
     public static HashMap<String,PreparedStatement> reusePsmMap =null;
+    /***
+    * @Description: 以sql为键，psm为值
+    */
+    public static HashMap<Connection, Statement> reuseStmMap =null;
 
     /***
      * @Description:私有化构造器
@@ -27,7 +32,21 @@ public class DbUtil {
     }
 
     /***
-    * @Description:
+    * @Description: 根据conn和sql获取stm
+    * @Param: [conn, sql]
+    * @Date: 2021/4/25
+    */
+    private  static Statement getStm(Connection conn) {
+        Statement stm =null;
+        try {
+            stm = conn.createStatement();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return stm;
+    }
+    /***
+    * @Description: 根据conn和sql获取psm
     * @Param: [conn, sql]
     * @Date: 2021/4/25
     */
@@ -58,6 +77,26 @@ public class DbUtil {
         //未缓存过，实例化
         PreparedStatement psm = getPsm(conn, sql);
         reusePsmMap.put(sql,psm);
+        return psm;
+    }
+
+    /***
+    * @Description: 通过此方法获取stm
+    * @Param: [conn, sql]
+    * @return: java.sql.PreparedStatement
+    * @Author: bjchen
+    * @Date: 2021/4/25
+    */
+    public static Statement getInstanceStm(Connection conn){
+        if(reuseStmMap==null){
+            reuseStmMap =new HashMap<>(4);
+        }else if(reuseStmMap.get(conn)!=null) {
+            //有缓存
+            return reuseStmMap.get(conn);
+        }
+        //未缓存过，实例化
+        Statement psm = getStm(conn);
+        reuseStmMap.put(conn,psm);
         return psm;
     }
 

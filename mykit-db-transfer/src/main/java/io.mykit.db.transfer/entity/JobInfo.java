@@ -36,6 +36,16 @@ public class JobInfo extends BaseJobInfo {
     private String destTableKey;
     //目标表可更新的字段
     private String destTableUpdate;
+    //更新 同步配置表 如lf_his_96lc_syn 所使用的sql
+    private String relateSynSql;
+
+    public String getRelateSynSql() {
+        return relateSynSql;
+    }
+
+    public void setRelateSynSql(String relateSynSql) {
+        this.relateSynSql = relateSynSql;
+    }
 
     public String getSrcTableFields() {
         return srcTableFields;

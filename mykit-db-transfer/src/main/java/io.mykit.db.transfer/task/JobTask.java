@@ -73,7 +73,7 @@ public class JobTask extends DbConnection implements Job {
             if (sql != null) {
                 this.logger.debug(sql);
                 long eStart = System.currentTimeMillis();
-                dbHelper.executeSQL(sql, outConn);
+                dbHelper.executeSQL(sql, inConn,outConn);
                 this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
             }
         } catch (SQLException e) {

@@ -20,7 +20,6 @@ import io.mykit.db.transfer.entity.JobInfo;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
 
 /**
  * @description 数据库同步接口
@@ -43,4 +42,13 @@ public interface DBSync {
      * @throws SQLException
      */
     void executeSQL(String sql, Connection conn) throws SQLException;
+
+    /**
+     *
+     * @param sql：要执行的SQL语句
+     * @param inConn：数据库连接:主
+     * @param outConn：数据库连接:备
+     * @throws SQLException
+     */
+    void executeSQL(String sql, Connection inConn,Connection outConn) throws SQLException;
 }

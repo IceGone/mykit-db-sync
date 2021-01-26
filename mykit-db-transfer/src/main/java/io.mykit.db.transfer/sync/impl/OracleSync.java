@@ -118,4 +118,9 @@ public class OracleSync extends AbstractDBSync implements DBSync {
         conn.commit();
         pst.close();
     }
+
+    @Override
+    public void executeSQL(String sql, Connection inConn, Connection outConn) throws SQLException {
+
+    }
 }
