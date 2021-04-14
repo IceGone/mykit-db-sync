@@ -18,7 +18,6 @@ package io.mykit.db.transfer.entity;
 import io.mykit.db.common.entity.BaseJobInfo;
 
 /**
- * @author binghe
  * @description 任务信息
  * @version 1.0.0
  */

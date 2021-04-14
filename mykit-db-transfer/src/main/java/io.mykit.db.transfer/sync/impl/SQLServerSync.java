@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 
 /**
- * @author binghe
  * @description SQL Server数据库同步实现
  * @version 1.0.0
  */

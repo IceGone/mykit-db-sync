@@ -43,7 +43,6 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 数据同步构建类
  */

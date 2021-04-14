@@ -16,19 +16,33 @@
 package io.mykit.db.transfer.sync.impl;
 
 
-import io.mykit.db.common.constants.MykitDbSyncConstants;
 import io.mykit.db.common.exception.MykitDbSyncException;
+import io.mykit.db.transfer.entity.JobInfo;
 import io.mykit.db.transfer.sync.DBSync;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author binghe
  * @description 执行数据库同步的抽象类
  * @version 1.0.0
  */
 public abstract class AbstractDBSync implements DBSync {
+    /***
+    * @Description: 由于lf_syn_job_conf字段较多，未简化配置 ，此处将各字段进行处理 ，
+    * @Param: [con, jobInfo]
+    * @Param: [数据库连接, 任务计划信息]
+    * @return: io.mykit.db.transfer.entity.JobInfo
+    * @Author: bjchen
+    * @Date: 2021/4/14
+    */
+    @Override
+    public JobInfo reformJobInfo(Connection con, JobInfo jobInfo ,String dbtype){
+
+        return jobInfo;
+    }
+
     /**
      * 去除String数组每个元素中的空格
      * @param src 需要去除空格的数组

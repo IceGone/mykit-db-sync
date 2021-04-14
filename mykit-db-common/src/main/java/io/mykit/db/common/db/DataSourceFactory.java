@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 数据源的工厂类
  */

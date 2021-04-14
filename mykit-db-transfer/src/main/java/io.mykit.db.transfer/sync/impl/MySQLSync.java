@@ -30,7 +30,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /**
- * @author binghe
  * @description MySQL数据库同步实现
  * @version 1.0.0
  */
@@ -39,6 +38,8 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
 
     @Override
     public String assembleSQL(String srcSql, Connection conn, JobInfo jobInfo) throws SQLException {
+        //先对jobInfo 的各个字段做预处理
+        this.reformJobInfo(conn,jobInfo,MykitDbSyncConstants.getColumnNameSql(MykitDbSyncConstants.TYPE_DB_MYSQL));
         String uniqueName = Tool.generateString(6) + "_" + jobInfo.getName();
         String[] destFields = jobInfo.getDestTableFields().split(MykitDbSyncConstants.FIELD_SPLIT);
         destFields = this.trimArrayItem(destFields);

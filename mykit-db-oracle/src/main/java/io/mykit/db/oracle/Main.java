@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 程序的启动入口类
  */

@@ -18,7 +18,6 @@ package io.mykit.db.common.utils;
 import java.util.regex.Pattern;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 正则匹配规则
  */

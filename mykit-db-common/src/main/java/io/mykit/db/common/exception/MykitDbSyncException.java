@@ -16,7 +16,6 @@
 package io.mykit.db.common.exception;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 自定义异常
  */

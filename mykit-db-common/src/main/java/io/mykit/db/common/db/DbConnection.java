@@ -23,7 +23,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 实现数据库的连接与关闭
  */

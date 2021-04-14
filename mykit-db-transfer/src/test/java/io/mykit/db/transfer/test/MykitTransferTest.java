@@ -18,7 +18,6 @@ package io.mykit.db.transfer.test;
 import io.mykit.db.transfer.build.DBSyncBuilder;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 测试功能
  */

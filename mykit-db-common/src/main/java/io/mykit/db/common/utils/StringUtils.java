@@ -16,7 +16,6 @@
 package io.mykit.db.common.utils;
 
 /**
- * @author binghe
  * @description 字符串工具类
  * @version 1.0.0
  */

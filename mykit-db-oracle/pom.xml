@@ -16,15 +16,16 @@
     </properties>
 
     <dependencies>
-        <dependency>
+        <!--<dependency>
             <groupId>com.oracle</groupId>
             <artifactId>ojdbc6</artifactId>
             <version>${oracle.jdbc.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>io.mykit.db.sync</groupId>
             <artifactId>mykit-db-common</artifactId>
             <version>1.0.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

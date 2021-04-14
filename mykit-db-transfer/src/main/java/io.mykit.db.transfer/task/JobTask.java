@@ -35,7 +35,6 @@ import java.sql.SQLException;
 import java.util.Date;
 
 /**
- * @author binghe
  * @description 同步数据库任务的具体实现
  * @version 1.0.0
  */

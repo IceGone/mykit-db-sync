@@ -18,7 +18,6 @@ package io.mykit.db.common.utils;
 import java.util.Map;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 集合的工具类
  */

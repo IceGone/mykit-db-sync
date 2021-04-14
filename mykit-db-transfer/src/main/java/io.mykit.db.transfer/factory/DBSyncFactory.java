@@ -23,7 +23,6 @@ import io.mykit.db.common.utils.StringUtils;
 import io.mykit.db.common.constants.MykitDbSyncConstants;
 
 /**
- * @author binghe
  * @description 创建同步对象的工厂类
  * @version 1.0.0
  */

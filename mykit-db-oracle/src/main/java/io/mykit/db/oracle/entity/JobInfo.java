@@ -18,7 +18,6 @@ package io.mykit.db.oracle.entity;
 import io.mykit.db.common.entity.BaseJobInfo;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 任务信息
  */

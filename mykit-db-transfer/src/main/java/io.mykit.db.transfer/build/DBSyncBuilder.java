@@ -42,7 +42,6 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 /**
- * @author binghe
  * @description 同步数据库数据的Builder对象
  * @version 1.0.0
  */

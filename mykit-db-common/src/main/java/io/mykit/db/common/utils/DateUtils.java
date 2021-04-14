@@ -11,8 +11,7 @@ import java.util.*;
 /**
  * 自定义时间日期工具
  * 
- * @author binghe
- * 
+ *
  */
 public class DateUtils {
 	

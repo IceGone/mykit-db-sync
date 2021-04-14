@@ -18,7 +18,6 @@ package io.mykit.db.common.entity;
 import java.io.Serializable;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 基础的任务信息
  */

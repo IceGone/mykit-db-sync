@@ -34,7 +34,6 @@ import java.sql.*;
 import java.util.Date;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 执行的任务
  */

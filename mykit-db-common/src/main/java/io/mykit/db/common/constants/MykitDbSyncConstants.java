@@ -16,11 +16,18 @@
 package io.mykit.db.common.constants;
 
 /**
- * @author binghe
  * @description 常量类
  * @version 1.0.0
  */
 public class MykitDbSyncConstants {
+    /***
+    * 任务计划 配置 的来源：job.xml
+    */
+    public static final String TYPE_CONF_JOBXML ="job.xml";
+    /***
+    * 任务计划 配置 的来源：数据库
+    */
+    public static final String TYPE_CONF_DATABASE ="database";
 
     /**
      * Oracle数据库时间格式
@@ -121,4 +128,18 @@ public class MykitDbSyncConstants {
      */
     public static final String TRIGGER_PREFIX = "trigger-";
 
+    /***
+    * @Description: 查询某个表的所有字段：MYSQL/ORACLE
+    * @Param: [typeDb]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/14
+    */
+    public static String getColumnNameSql(String typeDb){
+        switch (typeDb){
+            case TYPE_DB_MYSQL : return "select COLUMN_NAME from information_schema.COLUMNS where table_name = 'base_substation'";
+            case TYPE_DB_ORACLE : return "select (column_name) from user_tab_columns where table_name= upper('base_substation')";
+            default: return null;
+        }
+    }
 }

@@ -21,7 +21,6 @@ import org.dom4j.Element;
 import java.lang.reflect.Field;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 基础构建类
  */

@@ -29,7 +29,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description Oracle数据库同步实现
  */

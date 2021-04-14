@@ -18,7 +18,6 @@ package io.mykit.db.oracle.entity;
 import io.mykit.db.common.entity.BaseDBInfo;
 
 /**
- * @author binghe
  * @version 1.0.0
  * @description 数据库信息
  */
