@@ -20,13 +20,13 @@ import io.mykit.db.transfer.entity.JobInfo;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @description 数据库同步接口
  * @version 1.0.0
  */
 public interface DBSync {
-    JobInfo reformJobInfo(Connection con,JobInfo jobInfo ,String dbtype) throws SQLException;
     /**
      *
      * @param paramString:同步参数

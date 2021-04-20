@@ -15,20 +15,45 @@
  */
 package io.mykit.db.common.constants;
 
+
 /**
  * @description 常量类
  * @version 1.0.0
  */
 public class MykitDbSyncConstants {
     /***
+    * @Description: 任务计划 配置 拼接sql 头
+    */
+    public static final String SQL_SELECT_START ="select " ;
+    /***
+     * @Description: 任务计划 配置 拼接sql 尾
+     */
+    public static final String SQL_SELECT_END =" from " ;
+
+    /***
     * 任务计划 配置 的来源：job.xml
     */
     public static final String TYPE_CONF_JOBXML ="job.xml";
     /***
-    * 任务计划 配置 的来源：数据库
+    * 任务计划 配置 的来源：数据库 表 lf_syn_job_conf
     */
     public static final String TYPE_CONF_DATABASE ="database";
-
+    /***
+     * @Description: 任务计划配置 job.xml 或者 数据库lf_syn_job_conf 的各字段名
+     */
+    public static final String JOB_CONF_COLUMN_SRCSQL ="srcSql";
+    /***
+     * @Description: 任务计划配置 job.xml 或者 数据库lf_syn_job_conf 的各字段名
+     */
+    public static final String JOB_CONF_COLUMN_SRCTABLEFIELDS ="srcTableFields";
+    /***
+     * @Description: 任务计划配置 job.xml 或者 数据库lf_syn_job_conf 的各字段名
+     */
+    public static final String JOB_CONF_COLUMN_DESTTABLEFIELDS ="destTableFields";
+    /***
+     * @Description: 任务计划配置 job.xml 或者 数据库lf_syn_job_conf 的各字段名
+     */
+    public static final String JOB_CONF_COLUMN_DESTTABLEUPDATE ="destTableUpdate";
     /**
      * Oracle数据库时间格式
      */
@@ -135,10 +160,10 @@ public class MykitDbSyncConstants {
     * @Author: bjchen
     * @Date: 2021/4/14
     */
-    public static String getColumnNameSql(String typeDb){
+    public static String getColumnNameSql(String typeDb, String destTable){
         switch (typeDb){
-            case TYPE_DB_MYSQL : return "select COLUMN_NAME from information_schema.COLUMNS where table_name = 'base_substation'";
-            case TYPE_DB_ORACLE : return "select (column_name) from user_tab_columns where table_name= upper('base_substation')";
+            case TYPE_DB_MYSQL : return "select COLUMN_NAME from information_schema.COLUMNS where table_name = '"+destTable+"'";
+            case TYPE_DB_ORACLE : return "select (column_name) from user_tab_columns where table_name= upper('"+destTable+"')";
             default: return null;
         }
     }

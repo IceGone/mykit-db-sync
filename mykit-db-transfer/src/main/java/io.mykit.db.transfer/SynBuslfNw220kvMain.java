@@ -1,11 +1,13 @@
 package io.mykit.db.transfer;
 
+import io.mykit.db.common.constants.MykitDbSyncConstants;
 import io.mykit.db.common.utils.DateUtils;
 import io.mykit.db.transfer.factory.ConfTypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+
 
 /**
  * @program: mykit-db-sync
@@ -23,7 +25,9 @@ public class SynBuslfNw220kvMain {
         }*/
 
         logger.info("同步数据开始===>>>" + DateUtils.parseDateToString(new Date(), DateUtils.DATE_TIME_FORMAT));
-        ConfTypeFactory.create("job.xml").init(jobXmlPath).start();
+        //从数据库表
+        ConfTypeFactory.create(MykitDbSyncConstants.TYPE_CONF_DATABASE).init(jobXmlPath).start();
+        //ConfTypeFactory.create(MykitDbSyncConstants.TYPE_CONF_JOBXML).init(jobXmlPath).start();
         //DBSyncBuilder.builder().init(jobXmlPath).start();
     }
 }

@@ -40,7 +40,7 @@
             <cron>0/5 * * * * ?</cron>
             <srcSql>*</srcSql>
             <srcTableFields>*</srcTableFields>
-            <destTable>user</destTable>
+            <destTable>blog</destTable>
             <destTableFields>*</destTableFields>
             <destTableKey>id</destTableKey>
             <destTableUpdate>*</destTableUpdate>
