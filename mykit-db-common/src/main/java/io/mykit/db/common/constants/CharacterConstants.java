@@ -16,5 +16,9 @@ public class CharacterConstants {
     * @Description: 空串
     */
     public static final String CHARACTER_EMPTY_STR = "";
+    /***
+    * @Description: 空格
+    */
+    public static final String CHARACTER_EMPTY_BLOCK = " ";
 
 }

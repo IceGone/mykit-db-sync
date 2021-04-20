@@ -18,14 +18,14 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.lang.model.util.ElementScanner6;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.mykit.db.common.constants.CharacterConstants.CHARACTER_COMMA;
-import static io.mykit.db.common.constants.CharacterConstants.CHARACTER_EMPTY_STR;
+import static io.mykit.db.common.constants.CharacterConstants.*;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_SELECT_END;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_SELECT_START;
 import static io.mykit.db.common.utils.DbUtil.qr;
@@ -138,15 +138,15 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
      */
     private void updateJobInfo(JobInfo jobInfo, List<String> allColumn){
             //获取主键
-            List<String> destTableKeyList = Arrays.asList(jobInfo.getDestTableKey().split("\\,"));
+            List<String> destTableKeyList = Arrays.asList(jobInfo.getDestTableKey().trim().split("\\,"));
             //更新srcSql (select id, avatar, email, name, password, username from user)
-            jobInfo.setSrcSql(reforeJobInfoParam(jobInfo.getSrcSql(),allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
+            jobInfo.setSrcSql(reforeJobInfoParam(jobInfo.getSrcSql(),jobInfo.getDestTable(),allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
             //更新srcTableFields (id, avatar, email, name, password, username)
-            jobInfo.setSrcTableFields(reforeJobInfoParam(jobInfo.getSrcTableFields(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
+            jobInfo.setSrcTableFields(reforeJobInfoParam(jobInfo.getSrcTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
             //更新destTableFields (id, avatar, email, name, password, username)
-            jobInfo.setDestTableFields(reforeJobInfoParam(jobInfo.getDestTableFields(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
+            jobInfo.setDestTableFields(reforeJobInfoParam(jobInfo.getDestTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
             //更新destTableUpdate (avatar, email, name, password, username)
-            jobInfo.setDestTableUpdate(reforeJobInfoParam(jobInfo.getDestTableUpdate(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,true));
+            jobInfo.setDestTableUpdate(reforeJobInfoParam(jobInfo.getDestTableUpdate(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,true));
     }
 
     /***
@@ -168,7 +168,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
      * @Author: bjchen
      * @Date: 2021/4/14
      */
-    private String reforeJobInfoParam(String sql ,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
+    private String reforeJobInfoParam(String sql ,String destTable,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
         StringBuilder param =new StringBuilder(sqlStart);
         if(isNeedReform(sql)&&allColumn.size()>0){
             for(int i =0;i<allColumn.size();++i ){
@@ -177,10 +177,12 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
                 if(isKeyRemoved&&destTableKeyList.contains(column)){
                     continue;
                 }
-                param.append(i==allColumn.size()?CHARACTER_EMPTY_STR:column+CHARACTER_COMMA);
+                param.append(column).append(i==allColumn.size()-1?CHARACTER_EMPTY_STR:CHARACTER_COMMA);
             }
+            return param.append(sqlEnd.equals(CHARACTER_EMPTY_STR)?CHARACTER_EMPTY_STR:sqlEnd+destTable).toString();
+        }else {
+            return sql;
         }
-        return param.append(sqlEnd).toString();
     }
 
     /**
