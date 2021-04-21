@@ -22,6 +22,7 @@ import javax.lang.model.util.ElementScanner6;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.Arrays;
 import java.util.List;
 
@@ -118,7 +119,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
         List<String> allColumn =null;
         for(JobInfo jobInfo:jobInfos){
             try{
-                allColumn = qr.query(con,MykitDbSyncConstants.getColumnNameSql(MykitDbSyncConstants.TYPE_DB_MYSQL,jobInfo.getDestTable()),new ColumnListHandler<>(1));
+                allColumn = qr.query(con,MykitDbSyncConstants.getColumnNameSql(MykitDbSyncConstants.TYPE_DB_MYSQL,con.getCatalog(),jobInfo.getDestTable()),new ColumnListHandler<>(1));
             }catch (Exception e){
                 logger.error("获取lf_syn_job_conf表字段异常"+e.getMessage());
             }
@@ -139,25 +140,25 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
     private void updateJobInfo(JobInfo jobInfo, List<String> allColumn){
             //获取主键
             List<String> destTableKeyList = Arrays.asList(jobInfo.getDestTableKey().trim().split("\\,"));
-            //更新srcSql (select id, avatar, email, name, password, username from user)
-            jobInfo.setSrcSql(reforeJobInfoParam(jobInfo.getSrcSql(),jobInfo.getDestTable(),allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
+            //更新srcSql (select id, avatar, email, name, password, username from user) 对于数据库操作，新增条件where
+            jobInfo.setSrcSql(reformJobInfoParamForSrcSql(jobInfo.getSrcSql(),jobInfo.getDestTable(),allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
             //更新srcTableFields (id, avatar, email, name, password, username)
-            jobInfo.setSrcTableFields(reforeJobInfoParam(jobInfo.getSrcTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
+            jobInfo.setSrcTableFields(reformJobInfoParam(jobInfo.getSrcTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
             //更新destTableFields (id, avatar, email, name, password, username)
-            jobInfo.setDestTableFields(reforeJobInfoParam(jobInfo.getDestTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
+            jobInfo.setDestTableFields(reformJobInfoParam(jobInfo.getDestTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
             //更新destTableUpdate (avatar, email, name, password, username)
-            jobInfo.setDestTableUpdate(reforeJobInfoParam(jobInfo.getDestTableUpdate(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,true));
+            jobInfo.setDestTableUpdate(reformJobInfoParam(jobInfo.getDestTableUpdate(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,true));
     }
 
     /***
-     * @Description: 判断是否需要重置 参数为 * 重置，否则不需要
+     * @Description: 判断是否需要重置 参数为 *、""、null 重置，否则不需要
      * @Param: [param]
      * @return: boolean
      * @Author: bjchen
      * @Date: 2021/4/14
      */
     private boolean isNeedReform(String param) {
-        return "*".equals(param.trim());
+        return CHARACTER_EMPTY_STAR.equals(param.trim())||StringUtils.isEmpty(param);
     }
 
     /***
@@ -168,7 +169,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
      * @Author: bjchen
      * @Date: 2021/4/14
      */
-    private String reforeJobInfoParam(String sql ,String destTable,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
+    private String reformJobInfoParam(String sql ,String destTable,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
         StringBuilder param =new StringBuilder(sqlStart);
         if(isNeedReform(sql)&&allColumn.size()>0){
             for(int i =0;i<allColumn.size();++i ){
@@ -184,6 +185,33 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             return sql;
         }
     }
+    /***
+     * @Description: 判断是否需要重置sql:只有*号且 字段大于0 （本条特定用于 srcSql）
+     * @Param: [jobInfo, allColumn, destTableKeyList, sqlStart, sqlEnd, isKeyRemoved]
+     * @Param: [jobInfo, allColumn, destTableKeyList, 如果是sql需要填select, 如果是sql，需要填 from , 如果是字段，需要将字段去掉]
+     * @return: void
+     * @Author: bjchen
+     * @Date: 2021/4/14
+     */
+    private String reformJobInfoParamForSrcSql(String sql ,String destTable,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
+        StringBuilder param =new StringBuilder(sqlStart);
+        if(isNeedReform(sql)&&allColumn.size()>0){
+            for(int i =0;i<allColumn.size();++i ){
+                String column= allColumn.get(i);
+                //如需要移除key，则构建参数时将主键key移除
+                if(isKeyRemoved&&destTableKeyList.contains(column)){
+                    continue;
+                }
+                param.append(CHARACTER_a+CHARACTER_DOT+column).append(i==allColumn.size()-1?CHARACTER_EMPTY_STR:CHARACTER_COMMA);
+            }
+            param.append(sqlEnd.equals(CHARACTER_EMPTY_STR)?CHARACTER_EMPTY_STR:sqlEnd+destTable+CHARACTER_EMPTY_BLOCK+CHARACTER_a);
+            where CONCAT(a.BUSID,',',a.CALIBERID,',',a.YMD) in (SELECT b.uniquekeyvalue from lf_syn_data_transfer_status b where b.type=0 and b.jobid in (SELECT c.jobid from lf_syn_job_conf c WHERE c.desttable='lf_his_96lc'))
+            //param.append(getConcat(destTableKeyList));
+            return param.toString();
+        }else {
+            return sql;
+        }
+    }
 
     /**
      * 启动定时任务，同步数据库的数据
@@ -192,17 +220,17 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
     public void start() {
         for (int index = 0; index < jobList.size(); index++) {
             JobInfo jobInfo = jobList.get(index);
-            String logTitle = "[" + code + "]" + jobInfo.getName() + " ";
+            String logTitle = "[" + code + "]" + jobInfo.getJobname() + " ";
             try {
                 SchedulerFactory sf = new StdSchedulerFactory();
                 Scheduler sched = sf.getScheduler();
-                JobDetail job = newJob(JobTask.class).withIdentity(MykitDbSyncConstants.JOB_PREFIX.concat(jobInfo.getName()), code).build();
+                JobDetail job = newJob(JobTask.class).withIdentity(MykitDbSyncConstants.JOB_PREFIX.concat(jobInfo.getJobname()), code).build();
                 job.getJobDataMap().put(MykitDbSyncConstants.SRC_DB, srcDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.DEST_DB, destDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.JOB_INFO, jobInfo);
                 job.getJobDataMap().put(MykitDbSyncConstants.LOG_TITLE, logTitle);
                 logger.info(jobInfo.getCron());
-                CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getName()), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
+                CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getJobname()), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
                 sched.scheduleJob(job, trigger);
                 sched.start();
             } catch (Exception e) {

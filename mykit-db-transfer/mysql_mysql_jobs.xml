@@ -34,7 +34,7 @@
         必须配置destTable和destTableKey
         -->
         <job>
-            <name>1</name>
+            <jobname>1</jobname>
             <!--每隔30秒执行一次-->
             <!--<cron>0/5 * * * * ?</cron>-->
             <cron>0/5 * * * * ?</cron>

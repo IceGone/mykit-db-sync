@@ -160,9 +160,9 @@ public class MykitDbSyncConstants {
     * @Author: bjchen
     * @Date: 2021/4/14
     */
-    public static String getColumnNameSql(String typeDb, String destTable){
+    public static String getColumnNameSql(String typeDb,String database,String destTable){
         switch (typeDb){
-            case TYPE_DB_MYSQL : return "select COLUMN_NAME from information_schema.COLUMNS where table_name = '"+destTable+"'";
+            case TYPE_DB_MYSQL : return "select COLUMN_NAME from information_schema.COLUMNS where table_schema = '"+database+"' and table_name = '"+destTable+"'";
             case TYPE_DB_ORACLE : return "select (column_name) from user_tab_columns where table_name= upper('"+destTable+"')";
             default: return null;
         }

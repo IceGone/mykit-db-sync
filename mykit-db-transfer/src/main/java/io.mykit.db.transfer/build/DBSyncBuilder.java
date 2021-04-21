@@ -109,17 +109,17 @@ public class DBSyncBuilder extends BaseBuilder {
     public void start() {
         for (int index = 0; index < jobList.size(); index++) {
             JobInfo jobInfo = jobList.get(index);
-            String logTitle = "[" + code + "]" + jobInfo.getName() + " ";
+            String logTitle = "[" + code + "]" + jobInfo.getJobname() + " ";
             try {
                 SchedulerFactory sf = new StdSchedulerFactory();
                 Scheduler sched = sf.getScheduler();
-                JobDetail job = newJob(JobTask.class).withIdentity(MykitDbSyncConstants.JOB_PREFIX.concat(jobInfo.getName()), code).build();
+                JobDetail job = newJob(JobTask.class).withIdentity(MykitDbSyncConstants.JOB_PREFIX.concat(jobInfo.getJobname()), code).build();
                 job.getJobDataMap().put(MykitDbSyncConstants.SRC_DB, srcDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.DEST_DB, destDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.JOB_INFO, jobInfo);
                 job.getJobDataMap().put(MykitDbSyncConstants.LOG_TITLE, logTitle);
                 logger.info(jobInfo.getCron());
-                CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getName()), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
+                CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getJobname()), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
                 sched.scheduleJob(job, trigger);
                 sched.start();
             } catch (Exception e) {

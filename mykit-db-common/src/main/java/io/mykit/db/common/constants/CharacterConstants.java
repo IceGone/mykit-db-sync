@@ -11,6 +11,10 @@ public class CharacterConstants {
     * @Description: 逗号
     */
     public static final String CHARACTER_COMMA = ",";
+    /***
+    * @Description: 点号
+    */
+    public static final String CHARACTER_DOT = ".";
 
     /***
     * @Description: 空串
@@ -20,5 +24,13 @@ public class CharacterConstants {
     * @Description: 空格
     */
     public static final String CHARACTER_EMPTY_BLOCK = " ";
+    /***
+    * @Description: 星号
+    */
+    public static final String CHARACTER_EMPTY_STAR = "*";
+    /***
+    * @Description: 符号 a
+    */
+    public static final String CHARACTER_a = "a";
 
 }
