@@ -7,6 +7,11 @@ package io.mykit.db.common.constants;
  * @create: 2021-04-20
  **/
 public class CharacterConstants {
+
+    /***
+    * @Description: 0
+    */
+    public static final String CHARACTER_ZERO = "0";
     /***
     * @Description: 逗号
     */

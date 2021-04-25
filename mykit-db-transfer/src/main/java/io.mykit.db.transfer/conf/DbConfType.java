@@ -41,7 +41,7 @@ public class DbConfType extends AbstractConfType {
     public ConfType init(String configFile) {
         //获取除数据库连接信息
         getDBInfo(configFile);
-        String sql = "select * from lf_syn_job_conf";
+        String sql = "select * from syn_job_conf";
         Connection conn =null;
         try {
             conn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);

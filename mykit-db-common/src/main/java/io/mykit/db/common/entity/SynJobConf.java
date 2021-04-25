@@ -1,20 +1,16 @@
 package io.mykit.db.common.entity;
 
 
-/***
-* @Description:'主备数据同步配置表'
-* @Author: bjchen
-* @Date: 2021/4/21
-*/
-public class LfSynJobConf extends BaseSyn {
+public class SynJobConf extends BaseSyn {
   /***
-   * @Description:自增id，每条新增记录自增
-   */
-  private long jobId;
+  * @Description: 自增id，每条新增记录自增
+  */
+  private long jobid;
   /***
-   * @Description:任务名称,作数据库区分 0：短期,1:220kv,2:500kv
+   * @Description:0：短期,1:220kv,2:500kv
    */
   private String jobname;
+
   /***
    * @Description:'任务表达式'
    */
@@ -28,22 +24,19 @@ public class LfSynJobConf extends BaseSyn {
    */
   private String srctablefields;
   /***
+   * @Description:目标数据表
+   */
+  private String desttable;
+  /***
    * @Description:目标数据表字段(默认为所有字段)
    */
-  private String destTableFields;
-
-  /***
-   * @Description:'目标表更新字段'
-   */
-  private String destTableupdate;
-
-
-  public long getJobId() {
-    return jobId;
+  private String desttablefields;
+  public long getJobid() {
+    return jobid;
   }
 
-  public void setJobId(long jobId) {
-    this.jobId = jobId;
+  public void setJobid(long jobid) {
+    this.jobid = jobid;
   }
 
 
@@ -82,20 +75,21 @@ public class LfSynJobConf extends BaseSyn {
     this.srctablefields = srctablefields;
   }
 
-  public String getDestTableFields() {
-    return destTableFields;
+
+  public String getDesttable() {
+    return desttable;
   }
 
-  public void setDestTableFields(String destTableFields) {
-    this.destTableFields = destTableFields;
+  public void setDesttable(String desttable) {
+    this.desttable = desttable;
   }
 
-  public String getDestTableupdate() {
-    return destTableupdate;
+
+  public String getDesttablefields() {
+    return desttablefields;
   }
 
-  public void setDestTableupdate(String destTableupdate) {
-    this.destTableupdate = destTableupdate;
+  public void setDesttablefields(String desttablefields) {
+    this.desttablefields = desttablefields;
   }
-
 }

@@ -21,6 +21,7 @@ package io.mykit.db.common.constants;
  * @version 1.0.0
  */
 public class MykitDbSyncConstants {
+    public static final String TABLE_SYN_END ="_syn";
     /***
     * @Description: 任务计划 配置 拼接sql 头
     */

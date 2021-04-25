@@ -38,7 +38,7 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
 
     @Override
     public String assembleSQL(String srcSql, Connection conn, JobInfo jobInfo) throws SQLException {
-        String uniqueName = Tool.generateString(6) + "_" + jobInfo.getJobname();
+        String uniqueName = Tool.generateString(6) + "_" + jobInfo.getJobId();
         String[] destFields = jobInfo.getDestTableFields().split(MykitDbSyncConstants.FIELD_SPLIT);
         destFields = this.trimArrayItem(destFields);
         //默认的srcFields数组与destFields相同

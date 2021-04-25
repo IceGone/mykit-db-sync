@@ -27,8 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static io.mykit.db.common.constants.CharacterConstants.*;
-import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_SELECT_END;
-import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_SELECT_START;
+import static io.mykit.db.common.constants.MykitDbSyncConstants.*;
 import static io.mykit.db.common.utils.DbUtil.qr;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
@@ -141,7 +140,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             //获取主键
             List<String> destTableKeyList = Arrays.asList(jobInfo.getDestTableKey().trim().split("\\,"));
             //更新srcSql (select id, avatar, email, name, password, username from user) 对于数据库操作，新增条件where
-            jobInfo.setSrcSql(reformJobInfoParamForSrcSql(jobInfo.getSrcSql(),jobInfo.getDestTable(),allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
+            jobInfo.setSrcSql(reformJobInfoParamForSrcSql(jobInfo,allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
             //更新srcTableFields (id, avatar, email, name, password, username)
             jobInfo.setSrcTableFields(reformJobInfoParam(jobInfo.getSrcTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
             //更新destTableFields (id, avatar, email, name, password, username)
@@ -193,23 +192,44 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
      * @Author: bjchen
      * @Date: 2021/4/14
      */
-    private String reformJobInfoParamForSrcSql(String sql ,String destTable,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
-        StringBuilder param =new StringBuilder(sqlStart);
-        if(isNeedReform(sql)&&allColumn.size()>0){
+    private String reformJobInfoParamForSrcSql(JobInfo jobInfo,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
+        StringBuilder param =new StringBuilder("select ");
+        if(isNeedReform(jobInfo.getSrcSql())&&allColumn.size()>0){
             for(int i =0;i<allColumn.size();++i ){
                 String column= allColumn.get(i);
                 //如需要移除key，则构建参数时将主键key移除
                 if(isKeyRemoved&&destTableKeyList.contains(column)){
                     continue;
                 }
-                param.append(CHARACTER_a+CHARACTER_DOT+column).append(i==allColumn.size()-1?CHARACTER_EMPTY_STR:CHARACTER_COMMA);
+                param.append("a."+column).append(i==allColumn.size()-1?"":",");
             }
-            param.append(sqlEnd.equals(CHARACTER_EMPTY_STR)?CHARACTER_EMPTY_STR:sqlEnd+destTable+CHARACTER_EMPTY_BLOCK+CHARACTER_a);
-            where CONCAT(a.BUSID,',',a.CALIBERID,',',a.YMD) in (SELECT b.uniquekeyvalue from lf_syn_data_transfer_status b where b.type=0 and b.jobid in (SELECT c.jobid from lf_syn_job_conf c WHERE c.desttable='lf_his_96lc'))
-            //param.append(getConcat(destTableKeyList));
+            param.append(sqlEnd.equals("")?"":sqlEnd+jobInfo.getDestTable()+" "+"a");
+            param.append(" where (");
+            for(int i=0;i<destTableKeyList.size();++i){
+                param.append("a.").append(destTableKeyList.get(i)).append(i==destTableKeyList.size()-1?")":",");
+            }
+            param.append(" in ");
+            param.append("(select ");
+            for(int i=0;i<destTableKeyList.size();++i){
+                param.append("b.").append(destTableKeyList.get(i)).append(i==destTableKeyList.size()-1?"":",");
+            }
+            param.append(" from ");
+            param.append(jobInfo.getDestTable());
+            param.append(TABLE_SYN_END);
+            param.append(" b");
+            param.append(" where ");
+            //类型：主库->备库 0 备库->主库 1
+            param.append("b.TYPE=").append(CHARACTER_ZERO);
+            param.append(" and ");
+            //需同步次数，大于0，则同步
+            param.append("b.SYNCOUNT>").append(CHARACTER_ZERO);
+            param.append(" and ");
+            //同步状态：0 未，1：在，2：已（同步）
+            param.append("b.SYNSTATUS=").append(CHARACTER_ZERO);
+            param.append(")");
             return param.toString();
         }else {
-            return sql;
+            return jobInfo.getSrcSql();
         }
     }
 
@@ -220,17 +240,17 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
     public void start() {
         for (int index = 0; index < jobList.size(); index++) {
             JobInfo jobInfo = jobList.get(index);
-            String logTitle = "[" + code + "]" + jobInfo.getJobname() + " ";
+            String logTitle = "[" + code + "]" + jobInfo.getJobId() + " ";
             try {
                 SchedulerFactory sf = new StdSchedulerFactory();
                 Scheduler sched = sf.getScheduler();
-                JobDetail job = newJob(JobTask.class).withIdentity(MykitDbSyncConstants.JOB_PREFIX.concat(jobInfo.getJobname()), code).build();
+                JobDetail job = newJob(JobTask.class).withIdentity(MykitDbSyncConstants.JOB_PREFIX.concat(jobInfo.getJobId()+""), code).build();
                 job.getJobDataMap().put(MykitDbSyncConstants.SRC_DB, srcDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.DEST_DB, destDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.JOB_INFO, jobInfo);
                 job.getJobDataMap().put(MykitDbSyncConstants.LOG_TITLE, logTitle);
                 logger.info(jobInfo.getCron());
-                CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getJobname()), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
+                CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getJobId()+""), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
                 sched.scheduleJob(job, trigger);
                 sched.start();
             } catch (Exception e) {

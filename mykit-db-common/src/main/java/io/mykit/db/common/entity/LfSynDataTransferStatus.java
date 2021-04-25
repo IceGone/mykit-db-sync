@@ -8,7 +8,7 @@ package io.mykit.db.common.entity;
 * @Author: bjchen
 * @Date: 2021/4/21
 */
-public class LfSynDataTransferStatus extends BaseLfsyn{
+public class LfSynDataTransferStatus extends BaseSyn {
   /***
    * @Description:自增id，每条新增记录自增
    */

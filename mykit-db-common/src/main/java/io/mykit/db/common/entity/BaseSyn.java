@@ -6,7 +6,7 @@ package io.mykit.db.common.entity;
  * @author: bjchen
  * @create: 2021-04-21
  **/
-public class BaseLfsyn {
+public class BaseSyn {
     /***
      * @Description:目的数据表(若srcsql不设置，则默认源和目标同表)
      */
