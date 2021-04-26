@@ -68,6 +68,9 @@ public class JobTask extends DbConnection implements Job {
 
             DBSync dbHelper = DBSyncFactory.create(destDb.getDbtype());
             long start = System.currentTimeMillis();
+            //组装SQL前，先更新_syn表 如 lf_his_96lc_syn
+            dbHelper.executeUpdateTableSyn(jobInfo,inConn,outConn);
+
             String sql = dbHelper.assembleSQL(jobInfo.getSrcSql(), inConn, jobInfo);
             this.logger.info("组装SQL耗时: " + (System.currentTimeMillis() - start) + "ms");
             if (sql != null) {

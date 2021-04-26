@@ -51,4 +51,12 @@ public interface DBSync {
      * @throws SQLException
      */
     void executeSQL(String sql, Connection inConn,Connection outConn) throws SQLException;
+
+    /**
+     * @param jobInfo：获取要更新的表
+     * @param inConn：数据库连接:主
+     * @param outConn：数据库连接:备
+     * @throws SQLException
+     */
+    void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn,Connection outConn) throws SQLException;
 }

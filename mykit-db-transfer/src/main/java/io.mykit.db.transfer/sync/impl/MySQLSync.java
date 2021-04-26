@@ -147,5 +147,10 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         inPsm.close();
     }
 
+    @Override
+    public void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn, Connection outConn) throws SQLException {
+        /
+    }
+
 
 }

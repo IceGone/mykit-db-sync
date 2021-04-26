@@ -78,4 +78,9 @@ public class SQLServerSync extends AbstractDBSync implements DBSync {
     public void executeSQL(String sql, Connection inConn, Connection outConn) throws SQLException {
 
     }
+
+    @Override
+    public void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn, Connection outConn) throws SQLException {
+
+    }
 }
