@@ -27,9 +27,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_TYPE_SAVE;
+import static io.mykit.db.common.constants.MykitDbSyncConstants.TABLE_SYN_END;
+import static io.mykit.db.common.utils.StringUtils.getListByStringSplit;
 
 
 /**
@@ -55,14 +57,14 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         updateFields = this.trimArrayItem(updateFields);
         String destTable = jobInfo.getDestTable();
         String destTableKey = jobInfo.getDestTableKey();
-        List<String> destTableKeyList = Arrays.asList(jobInfo.getDestTableKey().trim().split("\\,"));
+        List<String> destTableKeyList = getListByStringSplit(jobInfo.getDestTableKey(),"\\,");
         PreparedStatement pst = conn.prepareStatement(srcSql);
         ResultSet rs = pst.executeQuery();
         StringBuilder sql = new StringBuilder();
         StringBuilder sqlUpdateSyn = new StringBuilder();
         //UPDATE lf_his_96lc_syn SET SYNCOUNT=SYNCOUNT-1,SYNSTATUS=if(SYNCOUNT-1=0,2,SYNSTATUS),SYNTIME=SYSDATE() WHERE BUSID='5' and CALIBERID='00' and YMD='20210101';
         sql.append("insert into ").append(destTable).append(" (").append(jobInfo.getDestTableFields()).append(") values ");
-        sqlUpdateSyn.append("UPDATE ").append(destTable).append(MykitDbSyncConstants.TABLE_SYN_END)
+        sqlUpdateSyn.append("UPDATE ").append(destTable).append(TABLE_SYN_END)
                 .append(" SET SYNCOUNT=SYNCOUNT-1,SYNSTATUS=if(SYNCOUNT-1=0,2,SYNSTATUS),SYNTIME=SYSDATE() WHERE (")
                 .append(jobInfo.getDestTableKey()).append(") in (");
         long count = 0;
@@ -122,6 +124,19 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         pst.close();
     }
 
+    public void executeSQL(List<String> sqls, Connection conn) throws SQLException {
+        PreparedStatement pst = conn.prepareStatement("");
+        for(String sql:sqls){
+            String[] sqlList = sql.split(";");
+            for (int index = 0; index < sqlList.length; index++) {
+                pst.addBatch(sqlList[index]);
+            }
+        }
+        pst.executeBatch();
+        conn.commit();
+        pst.close();
+    }
+
     /***
     * @Description: 【sql,主库,备库】 先执行备调更新 lf_his_96lc,再执行主调同步表 lf_his_96lc_syn
     * @Param: [sql, inConn, outConn]
@@ -149,8 +164,42 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
 
     @Override
     public void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn, Connection outConn) throws SQLException {
-        /
+        //获取 主库日期内数据 (处理后作为insert or update)
+        Map<String, Date> sMap =getTableKeyAndlasttimeMap(jobInfo,inConn);
+        //获取 备库日期内数据 (处理后作为delete)
+        Map<String, Date> dMap =getTableKeyAndlasttimeMap(jobInfo,outConn);
+
+        // insert or update 用 sMap
+        String key="";
+        for(Iterator<String> it=sMap.keySet().iterator();it.hasNext();){
+            key =it.next();
+            //主调有，备调也有
+            if(dMap.containsKey(key)){
+                if(sMap.get(key).compareTo(dMap.get(key))>0){
+                    //更新。不对sMap做操作，对dMap操作
+                }else {
+                    //不更新，移除sMap对应的key
+                    it.remove();
+                }
+                //移除dMap对应的key
+                dMap.remove(key);
+            }
+        }
+        int opearateSave =0;
+        int opearateDel =1;
+        //保存数据入 同步表对应的 _syn 表
+        //OPEARATE =0 （后续执行insert or update）
+        List<String> saveSql = getSaveSql(opearateSave,sMap, jobInfo);
+        //OPEARATE =1 （后续执行 目标表的 delete）
+        List<String> delSql = getSaveSql(opearateDel,dMap, jobInfo);
+        //执行sql
+        if( saveSql!=null && saveSql.size()>0 ){
+            this.logger.debug(saveSql.toString());
+            executeSQL(saveSql,inConn);
+        }
+        if( delSql!=null && delSql.size()>0 ){
+            this.logger.debug(delSql.toString());
+            executeSQL(delSql,inConn);
+        }
     }
-
-
 }

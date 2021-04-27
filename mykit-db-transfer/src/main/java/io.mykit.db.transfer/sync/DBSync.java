@@ -26,6 +26,7 @@ import java.sql.SQLException;
  * @version 1.0.0
  */
 public interface DBSync {
+
     /**
      *
      * @param paramString:同步参数
@@ -53,7 +54,7 @@ public interface DBSync {
     void executeSQL(String sql, Connection inConn,Connection outConn) throws SQLException;
 
     /**
-     * @param jobInfo：获取要更新的表
+     * @param jobInfo：更新要更新的表的主键:由于无法修改配置文件，无法跨库查询，默认更新当前日期前后两旬之内的数据
      * @param inConn：数据库连接:主
      * @param outConn：数据库连接:备
      * @throws SQLException

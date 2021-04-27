@@ -4,6 +4,7 @@ import org.apache.commons.dbutils.QueryRunner;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 
@@ -13,7 +14,7 @@ import java.util.HashMap;
  * @author: bjchen
  * @create: 2021-04-20
  **/
-public class DbUtil {
+public  class DbUtil {
     public static QueryRunner qr = new QueryRunner();
 
     /***
@@ -25,11 +26,6 @@ public class DbUtil {
     */
     public static HashMap<Connection, Statement> reuseStmMap =null;
 
-    /***
-     * @Description:私有化构造器
-     */
-    private DbUtil(){
-    }
 
     /***
     * @Description: 根据conn和sql获取stm
@@ -98,6 +94,20 @@ public class DbUtil {
         Statement psm = getStm(conn);
         reuseStmMap.put(conn,psm);
         return psm;
+    }
+
+    public static void executeSQL( Connection conn,String ...sqls) throws SQLException {
+        PreparedStatement pst = conn.prepareStatement("");
+        for(String sql:sqls){
+            String[] sqlList = sql.split(";");
+            for (int index = 0; index < sqlList.length; index++) {
+                pst.addBatch(sqlList[index]);
+            }
+            pst.executeBatch();
+            conn.commit();
+            pst.close();
+        }
+
     }
 
 }

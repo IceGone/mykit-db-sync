@@ -29,6 +29,7 @@ import java.util.List;
 import static io.mykit.db.common.constants.CharacterConstants.*;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.*;
 import static io.mykit.db.common.utils.DbUtil.qr;
+import static io.mykit.db.common.utils.StringUtils.getListByStringSplit;
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
@@ -138,7 +139,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
      */
     private void updateJobInfo(JobInfo jobInfo, List<String> allColumn){
             //获取主键
-            List<String> destTableKeyList = Arrays.asList(jobInfo.getDestTableKey().trim().split("\\,"));
+            List<String> destTableKeyList = getListByStringSplit(jobInfo.getDestTableKey(),"\\,");
             //更新srcSql (select id, avatar, email, name, password, username from user) 对于数据库操作，新增条件where
             jobInfo.setSrcSql(reformJobInfoParamForSrcSql(jobInfo,allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
             //更新srcTableFields (id, avatar, email, name, password, username)

@@ -21,6 +21,23 @@ package io.mykit.db.common.constants;
  * @version 1.0.0
  */
 public class MykitDbSyncConstants {
+
+    /***
+     * @Description: 同步表对应的同步信息表后缀
+     */
+    public static final Integer SQL_VALUES_COUNT =4000;
+
+    /***
+    * @Description: 同步表对应的同步信息表后缀
+    */
+    public static final String SQL_TYPE_SAVE ="save";
+    /***
+    * @Description: 同步表对应的同步信息表后缀
+    */
+    public static final String SQL_TYPE_DELETE ="delete";
+    /***
+    * @Description: 同步表对应的同步信息表后缀
+    */
     public static final String TABLE_SYN_END ="_syn";
     /***
     * @Description: 任务计划 配置 拼接sql 头
@@ -168,4 +185,17 @@ public class MykitDbSyncConstants {
             default: return null;
         }
     }
+
+    /***
+    * @Description: 获取同步表 距离系统时间 前后datediffCount天 的联合主键 数据
+    * @Param: [destTable, destTableKey, datediffCount]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/27
+    */
+    public static String getSqlTablekeyAndLasttime(String destTable,String destTableKey,int datediffCount){
+        return "select "+destTableKey+",LASTTIME from "+destTable +" where abs(datediff(LASTTIME,SYSDATE())) <='"+datediffCount+"'";
+    }
+
+
 }
