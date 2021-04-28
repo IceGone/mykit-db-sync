@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
+import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_VALUES_COUNT;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.TABLE_SYN_END;
 import static io.mykit.db.common.utils.StringUtils.getListByStringSplit;
 
@@ -76,7 +77,7 @@ public abstract class AbstractDBSync implements DBSync {
         Map<String,Date>  tableKeyAndlasttimeMap =new HashMap<>(2^12);
         List<String> destTableKeyList = getListByStringSplit(jobInfo.getDestTableKey(), "\\,");
         int dtkSize = destTableKeyList.size();
-        String sql = MykitDbSyncConstants.getSqlTablekeyAndLasttime(jobInfo.getDestTable(),jobInfo.getDestTableKey(),2);
+        String sql = MykitDbSyncConstants.getSqlTablekeyAndLasttime(jobInfo.getDestTable(),jobInfo.getDestTableKey(),3);
         PreparedStatement psm =null;
         ResultSet rs =null;
         StringBuilder tableKey =null;
@@ -107,18 +108,19 @@ public abstract class AbstractDBSync implements DBSync {
     * @Author: bjchen
     * @Date: 2021/4/27
     */
-    protected List<String> getSaveSql(int opearate,Map<String, Date> sMap, JobInfo jobInfo) {
-        List<String> saveSqls =new ArrayList<>(2^3);
+    protected List<String> getExecuteSqls(int opearate,Map<String, Date> sMap, JobInfo jobInfo) {
+        List<String> executeSqls =new ArrayList<>(2^4);
         String uniqueName = Tool.generateString(6) + "_" + jobInfo.getJobId();
         String key="";
-        int count =0;
+        long count =0;
         //更新
         if(sMap.size()>0){
-            saveSqls.add(new StringBuffer("alter table ").append(jobInfo.getDestTable()).append(TABLE_SYN_END).append(" add constraint ").append(uniqueName)
-                    .append(" unique (").append(jobInfo.getDestTableKey()).append(")").toString());
+            executeSqls.add(getAlterkey(jobInfo.getDestTable()+TABLE_SYN_END,uniqueName,jobInfo.getDestTableKey()));
+
             StringBuilder sqlHead = new StringBuilder("insert into ").append(jobInfo.getDestTable()).append(TABLE_SYN_END).append(" (").append("JOBID,")
                     .append(jobInfo.getDestTableKey()).append(",CREATETIME,SYNTIME,TYPE,OPEARATE,SYNCOUNT,SYNSTATUS" ).append(") values ");
-            StringBuilder sqlTail =new StringBuilder(" on duplicate key update ").append("SYNCOUNT=SYNCOUNT+1,SYNSTATUS=if(SYNCOUNT+1>0,0,SYNSTATUS)");
+            //最多同步数据量为2即可
+            StringBuilder sqlTail =new StringBuilder(" on duplicate key update ").append("SYNCOUNT=if(SYNCOUNT<2,SYNCOUNT+1,SYNCOUNT),SYNSTATUS=if(SYNCOUNT+1>0,0,SYNSTATUS)");
             StringBuilder sql = new StringBuilder(sqlHead);
 
             // 参数配置化
@@ -134,27 +136,20 @@ public abstract class AbstractDBSync implements DBSync {
 
                 count++;
 
-                if(count%4000==0){
-                    sql=sql.deleteCharAt(sql.length()-1);
-                    sql.append(sqlTail);
-                    saveSqls.add(sql.toString());
-
+                if(count%SQL_VALUES_COUNT==0){
+                    addExecuteSqls(executeSqls,sql,sqlTail);
                     sql = new StringBuilder(sqlHead);
                 }
-
-            }
-            if(count%4000!=0){
-                sql=sql.deleteCharAt(sql.length()-1);
-                sql.append(sqlTail);
-                saveSqls.add(sql.toString());
-
             }
 
-            saveSqls.add(new StringBuilder("alter table ").append(jobInfo.getDestTable()).append(TABLE_SYN_END).append(" drop index ").append(uniqueName).toString());
+            if(count%SQL_VALUES_COUNT!=0){
+                addExecuteSqls(executeSqls,sql,sqlTail);
+            }
+
+            executeSqls.add(getDropkey(jobInfo.getDestTable()+TABLE_SYN_END,uniqueName));
         }
 
-
-        return saveSqls;
+        return executeSqls;
     }
 
 
@@ -180,4 +175,44 @@ public abstract class AbstractDBSync implements DBSync {
         }
         return null;
     }
+
+    /***
+    * @Description: 拼接sql后添加到sqls
+    * @Param: [executeSqls, sql, sqlTail]
+    * @return: void
+    * @Author: bjchen
+    * @Date: 2021/4/28
+    */
+    protected void addExecuteSqls(List<String> executeSqls, StringBuilder sql, StringBuilder sqlTail) {
+
+        sql=sql.deleteCharAt(sql.length()-1);
+        sql.append(sqlTail);
+        executeSqls.add(sql.toString());
+    }
+
+    /**
+    * @Description: 添加联合主键
+    * @Param: [tableName, uniqueName]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/28
+    */
+    protected String getAlterkey(String tableName, String uniqueName,String uniqueKey ) {
+        return new StringBuffer("alter table ").append(tableName).append(" add constraint ").append(uniqueName)
+                .append(" unique (").append(uniqueKey).append(")").toString();
+    }
+
+    /***
+    * @Description: 移除联合主键
+    * @Param: [tableName, uniqueName]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/28
+    */
+    protected String getDropkey(String tableName, String uniqueName) {
+        return new StringBuilder("alter table ").append(tableName).append(" drop index ").append(uniqueName).toString();
+    }
+
+
+    
 }

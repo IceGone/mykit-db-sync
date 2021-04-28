@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @description 同步数据库任务的具体实现
@@ -71,12 +72,19 @@ public class JobTask extends DbConnection implements Job {
             //组装SQL前，先更新_syn表 如 lf_his_96lc_syn
             dbHelper.executeUpdateTableSyn(jobInfo,inConn,outConn);
 
-            String sql = dbHelper.assembleSQL(jobInfo.getSrcSql(), inConn, jobInfo);
+            List<String> sql = dbHelper.assembleSaveSQL(jobInfo.getSrcSql(), inConn, jobInfo);
+            List<String> sqlDel = dbHelper.assembleDelSQL(jobInfo.getSrcSqlDel(), inConn, jobInfo);
             this.logger.info("组装SQL耗时: " + (System.currentTimeMillis() - start) + "ms");
-            if (sql != null) {
-                this.logger.debug(sql);
+            if (sql != null&&sql.size()>2) {
+                this.logger.debug(sql.toString());
                 long eStart = System.currentTimeMillis();
                 dbHelper.executeSQL(sql, inConn,outConn);
+                this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
+            }
+            if (sql != null&&sqlDel.size()>2) {
+                this.logger.debug(sqlDel.toString());
+                long eStart = System.currentTimeMillis();
+                dbHelper.executeSQL(sqlDel, inConn,outConn);
                 this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
             }
         } catch (SQLException e) {

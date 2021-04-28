@@ -23,9 +23,9 @@ package io.mykit.db.common.constants;
 public class MykitDbSyncConstants {
 
     /***
-     * @Description: 同步表对应的同步信息表后缀
+     * @Description: 同步时每几条数据执行一次
      */
-    public static final Integer SQL_VALUES_COUNT =4000;
+    public static final Integer SQL_VALUES_COUNT =100;
 
     /***
     * @Description: 同步表对应的同步信息表后缀

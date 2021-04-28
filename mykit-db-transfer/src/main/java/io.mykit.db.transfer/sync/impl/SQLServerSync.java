@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.List;
 
 /**
  * @description SQL Server数据库同步实现
@@ -67,6 +68,16 @@ public class SQLServerSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
+    public List<String> assembleSaveSQL(String paramString, Connection paramConnection, JobInfo paramJobInfo) throws SQLException {
+        return null;
+    }
+
+    @Override
+    public List<String> assembleDelSQL(String paramString, Connection paramConnection, JobInfo paramJobInfo) throws SQLException {
+        return null;
+    }
+
+    @Override
     public void executeSQL(String sql, Connection conn) throws SQLException {
         PreparedStatement pst = conn.prepareStatement(sql);
         pst.executeUpdate();
@@ -76,6 +87,11 @@ public class SQLServerSync extends AbstractDBSync implements DBSync {
 
     @Override
     public void executeSQL(String sql, Connection inConn, Connection outConn) throws SQLException {
+
+    }
+
+    @Override
+    public void executeSQL(List<String> sql, Connection inConn, Connection outConn) throws SQLException {
 
     }
 

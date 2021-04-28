@@ -24,8 +24,10 @@ import io.mykit.db.common.entity.BaseJobInfo;
 public class JobInfo extends BaseJobInfo {
     private static final long serialVersionUID = -1907092113028096170L;
 
-    //源数据源sql
+    //源数据源sql 保存
     private String srcSql;
+    //源数据源sql 删除
+    private String srcSqlDel;
     //源数据表字段
     private String srcTableFields;
     //目标数据表
@@ -93,5 +95,13 @@ public class JobInfo extends BaseJobInfo {
 
     public void setDestTableUpdate(String destTableUpdate) {
         this.destTableUpdate = destTableUpdate;
+    }
+
+    public String getSrcSqlDel() {
+        return srcSqlDel;
+    }
+
+    public void setSrcSqlDel(String srcSqlDel) {
+        this.srcSqlDel = srcSqlDel;
     }
 }

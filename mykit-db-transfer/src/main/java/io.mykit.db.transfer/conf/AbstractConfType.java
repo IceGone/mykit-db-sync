@@ -141,7 +141,8 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             //获取主键
             List<String> destTableKeyList = getListByStringSplit(jobInfo.getDestTableKey(),"\\,");
             //更新srcSql (select id, avatar, email, name, password, username from user) 对于数据库操作，新增条件where
-            jobInfo.setSrcSql(reformJobInfoParamForSrcSql(jobInfo,allColumn,destTableKeyList,SQL_SELECT_START,SQL_SELECT_END,false));
+            jobInfo.setSrcSql(reformJobInfoParamForSrcSql(jobInfo,allColumn,destTableKeyList,SQL_SELECT_END,false));
+            jobInfo.setSrcSqlDel(reformJobInfoParamForSrcSqlDel(jobInfo,allColumn,destTableKeyList,SQL_SELECT_END));
             //更新srcTableFields (id, avatar, email, name, password, username)
             jobInfo.setSrcTableFields(reformJobInfoParam(jobInfo.getSrcTableFields(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,false));
             //更新destTableFields (id, avatar, email, name, password, username)
@@ -149,6 +150,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             //更新destTableUpdate (avatar, email, name, password, username)
             jobInfo.setDestTableUpdate(reformJobInfoParam(jobInfo.getDestTableUpdate(),jobInfo.getDestTable(),allColumn,destTableKeyList,CHARACTER_EMPTY_STR,CHARACTER_EMPTY_STR,true));
     }
+
 
     /***
      * @Description: 判断是否需要重置 参数为 *、""、null 重置，否则不需要
@@ -193,7 +195,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
      * @Author: bjchen
      * @Date: 2021/4/14
      */
-    private String reformJobInfoParamForSrcSql(JobInfo jobInfo,List<String> allColumn, List<String> destTableKeyList, String sqlStart,String sqlEnd,boolean isKeyRemoved) {
+    private String reformJobInfoParamForSrcSql(JobInfo jobInfo,List<String> allColumn, List<String> destTableKeyList,String sqlEnd,boolean isKeyRemoved) {
         StringBuilder param =new StringBuilder("select ");
         if(isNeedReform(jobInfo.getSrcSql())&&allColumn.size()>0){
             for(int i =0;i<allColumn.size();++i ){
@@ -220,19 +222,50 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             param.append(" b");
             param.append(" where ");
             //类型：主库->备库 0 备库->主库 1
-            param.append("b.TYPE=").append(CHARACTER_ZERO);
+            param.append("b.TYPE=").append("'").append(CHARACTER_NUM_0).append("'");
+            param.append(" and ");
+            //操作：0：save, 1:delete
+            param.append("b.OPEARATE=").append("'").append(CHARACTER_NUM_0).append("'");
             param.append(" and ");
             //需同步次数，大于0，则同步
-            param.append("b.SYNCOUNT>").append(CHARACTER_ZERO);
+            param.append("b.SYNCOUNT>").append("'").append(CHARACTER_NUM_0).append("'");
             param.append(" and ");
             //同步状态：0 未，1：在，2：已（同步）
-            param.append("b.SYNSTATUS=").append(CHARACTER_ZERO);
+            param.append("b.SYNSTATUS=").append("'").append(CHARACTER_NUM_0).append("'");
             param.append(")");
             return param.toString();
         }else {
+            //此处需要继续处理，避免当写完整的sql，不需要处理时，获取到的delete sql 为 srcSql
             return jobInfo.getSrcSql();
         }
     }
+
+    /***
+    * @Description: 获取 _syn 表 如lf_his_96lc_syn 的删除数据
+    * @Param: [jobInfo, allColumn, destTableKeyList, sqlEnd, isKeyRemoved]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/28
+    */
+    private String reformJobInfoParamForSrcSqlDel(JobInfo jobInfo,List<String> allColumn, List<String> destTableKeyList,String sqlEnd){
+        StringBuilder param =new StringBuilder();
+        param.append("select ").append(jobInfo.getDestTableKey()).append(" from ");
+        param.append(jobInfo.getDestTable()).append(TABLE_SYN_END).append(" where ");
+        //类型：主库->备库 0 备库->主库 1
+        param.append("TYPE=").append("'").append(CHARACTER_NUM_0).append("'");
+        param.append(" and ");
+        //操作：0：save, 1:delete
+        param.append("OPEARATE=").append("'").append(CHARACTER_NUM_1).append("'");
+        param.append(" and ");
+        //需同步次数，大于0，则同步
+        param.append("SYNCOUNT>").append("'").append(CHARACTER_NUM_0).append("'");
+        param.append(" and ");
+        //同步状态：0 未，1：在，2：已（同步）
+        param.append("SYNSTATUS=").append("'").append(CHARACTER_NUM_0).append("'");
+
+        return param.toString();
+    }
+
 
     /**
      * 启动定时任务，同步数据库的数据
