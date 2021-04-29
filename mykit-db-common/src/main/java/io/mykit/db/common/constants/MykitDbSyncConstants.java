@@ -147,6 +147,10 @@ public class MykitDbSyncConstants {
      */
     public static final String NODE_CODE = "code";
     /**
+     * 对应xml文件的env节点: 程序所在环境(必须配置)：主调:0 ，备调 :1
+     */
+    public static final String NODE_ENV = "env";
+    /**
      * 源数据库
      */
     public static final String SRC_DB = "srcDb";

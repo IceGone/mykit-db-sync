@@ -118,17 +118,16 @@ public abstract class AbstractDBSync implements DBSync {
             executeSqls.add(getAlterkey(jobInfo.getDestTable()+TABLE_SYN_END,uniqueName,jobInfo.getDestTableKey()));
 
             StringBuilder sqlHead = new StringBuilder("insert into ").append(jobInfo.getDestTable()).append(TABLE_SYN_END).append(" (").append("JOBID,")
-                    .append(jobInfo.getDestTableKey()).append(",CREATETIME,SYNTIME,TYPE,OPEARATE,SYNCOUNT,SYNSTATUS" ).append(") values ");
+                    .append(jobInfo.getDestTableKey()).append(",CREATETIME,SYNTIME,ENV,OPEARATE,SYNCOUNT,SYNSTATUS" ).append(") values ");
             //最多同步数据量为2即可
             StringBuilder sqlTail =new StringBuilder(" on duplicate key update ").append("SYNCOUNT=if(SYNCOUNT<2,SYNCOUNT+1,SYNCOUNT),SYNSTATUS=if(SYNCOUNT+1>0,0,SYNSTATUS)");
             StringBuilder sql = new StringBuilder(sqlHead);
 
-            // 参数配置化
+            // 后期 参数配置化
             int type =0;
             int syncount =1;
             int synstatus =0;
-            //INSERT INTO `blogs`.`lf_his_96lc_syn`(`JOBID`,  `BUSID`,`CALIBERID`,`YMD`, `CREATETIME`, `SYNTIME`,`TYPE`,`OPEARATE`, `SYNSTATUS`) VALUES (
-            // 2, '5','00','20210101', '2020-10-31 09:03:00', NULL, 0, 0,0);
+
             for(Iterator<String> it=sMap.keySet().iterator();it.hasNext();){
                 key =it.next();
                 sql.append("('").append(jobInfo.getJobId()).append("',").append(key).append(",").append("SYSDATE()").append(",").append("NULL").append(",'")

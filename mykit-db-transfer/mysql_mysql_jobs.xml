@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root>
+    <env>0</env> <!--本程序所在环境(必须配置)：主调:0，备调 :1-->
     <code>4500000001</code>
     <source>
         <url>jdbc:mysql://182.254.186.173:3306/blogs?useUnicode=true&amp;characterEncoding=UTF-8&amp;useOldAliasMetadataBehavior=true</url>

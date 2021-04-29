@@ -222,7 +222,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             param.append(" b");
             param.append(" where ");
             //类型：主库->备库 0 备库->主库 1
-            param.append("b.TYPE=").append("'").append(CHARACTER_NUM_0).append("'");
+            param.append("b.ENV=").append("'").append(CHARACTER_NUM_0).append("'");
             param.append(" and ");
             //操作：0：save, 1:delete
             param.append("b.OPEARATE=").append("'").append(CHARACTER_NUM_0).append("'");
@@ -252,7 +252,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
         param.append("select ").append(jobInfo.getDestTableKey()).append(" from ");
         param.append(jobInfo.getDestTable()).append(TABLE_SYN_END).append(" where ");
         //类型：主库->备库 0 备库->主库 1
-        param.append("TYPE=").append("'").append(CHARACTER_NUM_0).append("'");
+        param.append("ENV=").append("'").append(CHARACTER_NUM_0).append("'");
         param.append(" and ");
         //操作：0：save, 1:delete
         param.append("OPEARATE=").append("'").append(CHARACTER_NUM_1).append("'");
