@@ -151,6 +151,15 @@ public class MykitDbSyncConstants {
      */
     public static final String NODE_ENV = "env";
     /**
+     * 对应xml文件的env节点: 主调->备调:0
+     */
+    public static final String NODE_ENV_0 = "0";
+
+    /**
+     * 对应xml文件的env节点: 主调:0
+     */
+    public static final String NODE_ENV_1 = "1";
+    /**
      * 源数据库
      */
     public static final String SRC_DB = "srcDb";
@@ -201,5 +210,51 @@ public class MykitDbSyncConstants {
         return "select "+destTableKey+",LASTTIME from "+destTable +" where abs(datediff(LASTTIME,SYSDATE())) <='"+datediffCount+"'";
     }
 
+    /***
+    * @Description: 表名 syn_server_status
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    public static final String TABLE_SYN_SERVER_STATUS = "syn_server_status";
+    /***
+    * @Description: 表名 syn_server_status
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    public static final String TABLE_LF_CTRL_NET = "lf_ctrl_net";
+    /***
+    * @Description: 字段名 NETID
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    public static final String FIEL_NEIID = "NETID";
+    /***
+    * @Description: 字段名
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    public static final String FIEL_ID = "ID";
+
+    /***
+    * @Description: 在获取连接后，执行此sql 查询是否能正常访问数据库
+    * @Param: [destTable, destTableKey]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    public static String getSqlTestConnection(String destTable,String destTableKey ){
+        return "select "+destTableKey+" from "+destTable ;
+    }
+
+    /***
+    * @Description: 根据表名和排序字段获取查询最新记录的sql
+    * @Param: [destTable, destTableKey]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    public static String getMaxEntityFromTable(String destTable,String destTableKey ){
+        return "select * from "+destTable + " order by "+destTableKey + " limit 1" ;
+    }
 
 }

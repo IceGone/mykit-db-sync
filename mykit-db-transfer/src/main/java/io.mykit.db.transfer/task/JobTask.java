@@ -17,6 +17,7 @@ package io.mykit.db.transfer.task;
 
 import io.mykit.db.common.constants.MykitDbSyncConstants;
 import io.mykit.db.common.db.DbConnection;
+import io.mykit.db.common.entity.SynServerStatus;
 import io.mykit.db.common.exception.MykitDbSyncException;
 import io.mykit.db.common.utils.DateUtils;
 import io.mykit.db.transfer.entity.DBInfo;
@@ -51,14 +52,34 @@ public class JobTask extends DbConnection implements Job {
         this.logger.info("开始任务调度: {}", DateUtils.parseDateToString(new Date(), DateUtils.DATE_TIME_FORMAT));
         Connection inConn = null;
         Connection outConn = null;
+        //主服务器状态，默认正常运行
+        int serverStatus =0;
         JobDataMap data = context.getJobDetail().getJobDataMap();
         DBInfo srcDb = (DBInfo) data.get(MykitDbSyncConstants.SRC_DB);
         DBInfo destDb = (DBInfo) data.get(MykitDbSyncConstants.DEST_DB);
         JobInfo jobInfo = (JobInfo) data.get(MykitDbSyncConstants.JOB_INFO);
         String logTitle = (String) data.get(MykitDbSyncConstants.LOG_TITLE);
+        String env = (String) data.get(MykitDbSyncConstants.NODE_ENV);
+
+        DBSync dbHelper = DBSyncFactory.create(destDb.getDbtype());
+
         try {
-            inConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
-            outConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
+            if(MykitDbSyncConstants.NODE_ENV_0.equals(env)){
+                inConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
+                outConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
+                //获取主调运行的最新状态
+                SynServerStatus lastSynServerStatus = dbHelper.getLastSynServerStatus(outConn);
+                // 根据主调运行状态 保存 备调的 syn_server_status 表
+                serverStatus = dbHelper.insertOrUpdateSSS(inConn,outConn);
+
+                //主调正常
+
+                //主备切换
+            }else if(MykitDbSyncConstants.NODE_ENV_1.equals(env)){
+                inConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
+                outConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
+            }
+
             if (inConn == null) {
                 this.logger.error("请检查源数据连接!");
                 throw new MykitDbSyncException("请检查源数据连接!");
@@ -66,8 +87,6 @@ public class JobTask extends DbConnection implements Job {
                 this.logger.error("请检查目标数据连接!");
                 throw new MykitDbSyncException("请检查目标数据连接!");
             }
-
-            DBSync dbHelper = DBSyncFactory.create(destDb.getDbtype());
             long start = System.currentTimeMillis();
             //组装SQL前，先更新_syn表 如 lf_his_96lc_syn
             dbHelper.executeUpdateTableSyn(jobInfo,inConn,outConn);

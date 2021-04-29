@@ -24,6 +24,8 @@ public class SynServerStatus {
    */
   private long islive;
 
+  public SynServerStatus() {
+  }
 
   public long getId() {
     return id;

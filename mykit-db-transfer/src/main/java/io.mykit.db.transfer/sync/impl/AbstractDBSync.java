@@ -211,7 +211,4 @@ public abstract class AbstractDBSync implements DBSync {
     protected String getDropkey(String tableName, String uniqueName) {
         return new StringBuilder("alter table ").append(tableName).append(" drop index ").append(uniqueName).toString();
     }
-
-
-    
 }

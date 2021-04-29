@@ -40,11 +40,11 @@ public class DbConfType extends AbstractConfType {
     @Override
     public ConfType init(String configFile) {
         //获取除数据库连接信息
-        getDBInfo(configFile);
+        this.getDBInfo(configFile);
         String sql = "select * from syn_job_conf";
         Connection conn =null;
         try {
-            conn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
+            conn = getConnectionByEnv();
             jobList= qr.query(conn,sql,new BeanListHandler<JobInfo>(JobInfo.class));
         }catch (Exception e){
             logger.error("获取数据库连接失败");
@@ -54,4 +54,6 @@ public class DbConfType extends AbstractConfType {
 
         return this;
     }
+
+
 }

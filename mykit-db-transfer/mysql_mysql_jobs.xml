@@ -2,7 +2,7 @@
 <root>
     <env>0</env> <!--本程序所在环境(必须配置)：主调:0，备调 :1-->
     <code>4500000001</code>
-    <source>
+    <source> <!--主库相关信息-->
         <url>jdbc:mysql://182.254.186.173:3306/blogs?useUnicode=true&amp;characterEncoding=UTF-8&amp;useOldAliasMetadataBehavior=true</url>
         <username>root</username>
         <password>520520</password>
@@ -10,7 +10,7 @@
         <conftype>database</conftype>  <!--从本xml获取同步表信息：job.xml,从数据库获取同步表信息：database-->
         <driver>com.mysql.jdbc.Driver</driver>
     </source>
-    <dest>
+    <dest> <!--备库相关信息-->
         <url>jdbc:mysql://localhost:3306/blogs?useUnicode=true&amp;characterEncoding=UTF-8&amp;useOldAliasMetadataBehavior=true</url>
         <username>root</username>
         <password>520520</password>

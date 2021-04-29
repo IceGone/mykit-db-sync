@@ -16,6 +16,7 @@
 package io.mykit.db.transfer.sync;
 
 
+import io.mykit.db.common.entity.SynServerStatus;
 import io.mykit.db.transfer.entity.JobInfo;
 
 import java.sql.Connection;
@@ -87,4 +88,24 @@ public interface DBSync {
      * @throws SQLException
      */
     void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn,Connection outConn) throws SQLException;
+
+    /***
+    * @Description: 根据主调是否正常运行更新 备调数据库的 syn_server_status 表
+    * @Param: [inConn, outConn]
+    * @return: java.lang.Integer
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    Integer insertOrUpdateSSS(Connection inConn, Connection outConn);
+
+    /***
+    * @Description: 获取备调 syn_server_status 表的最新状态
+    * @Param: [outConn]
+    * @return: io.mykit.db.common.entity.SynServerStatus
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    SynServerStatus getLastSynServerStatus(Connection outConn);
+
+
 }

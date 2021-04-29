@@ -18,12 +18,9 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.lang.model.util.ElementScanner6;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.util.Arrays;
 import java.util.List;
 
 import static io.mykit.db.common.constants.CharacterConstants.*;
@@ -48,6 +45,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
     protected DBInfo destDb;
     protected List<JobInfo> jobList;
     protected String code;
+    protected String env;
 
     protected AbstractConfType(){}
 
@@ -98,11 +96,32 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
             elementInObject(src, srcDb);
             elementInObject(dest, destDb);
             code = root.element(MykitDbSyncConstants.NODE_CODE).getTextTrim();
+            env = root.element(MykitDbSyncConstants.NODE_ENV).getTextTrim();
         } catch (Exception e) {
             e.printStackTrace();
             throw new MykitDbSyncException(e.getMessage());
         }
         return this;
+    }
+
+    /***
+    * @Description: 根据 env类型 获取主备调连接
+    * @Param: []
+    * @return: java.sql.Connection
+    * @Author: bjchen
+    * @Date: 2021/4/29
+    */
+    protected Connection getConnectionByEnv(){
+        //主调->备调
+        if(MykitDbSyncConstants.NODE_ENV_0.equals(env)){
+            return getConnection(MykitDbSyncConstants.TYPE_SOURCE,srcDb);
+        }
+        //备调->主调
+        if(MykitDbSyncConstants.NODE_ENV_1.equals(env)){
+            return getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
+        }
+
+        return null;
     }
 
     /***
@@ -283,6 +302,7 @@ public abstract class AbstractConfType extends DbConnection implements ConfType 
                 job.getJobDataMap().put(MykitDbSyncConstants.DEST_DB, destDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.JOB_INFO, jobInfo);
                 job.getJobDataMap().put(MykitDbSyncConstants.LOG_TITLE, logTitle);
+                job.getJobDataMap().put(MykitDbSyncConstants.NODE_ENV, env);
                 logger.info(jobInfo.getCron());
                 CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getJobId()+""), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
                 sched.scheduleJob(job, trigger);

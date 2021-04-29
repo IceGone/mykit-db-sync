@@ -16,10 +16,13 @@
 package io.mykit.db.transfer.sync.impl;
 
 import io.mykit.db.common.constants.MykitDbSyncConstants;
+import io.mykit.db.common.entity.SynServerStatus;
 import io.mykit.db.common.utils.StringUtils;
 import io.mykit.db.common.utils.Tool;
 import io.mykit.db.transfer.entity.JobInfo;
 import io.mykit.db.transfer.sync.DBSync;
+import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.dbutils.handlers.ColumnListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +36,7 @@ import static io.mykit.db.common.constants.CharacterConstants.CHARACTER_1;
 import static io.mykit.db.common.constants.CharacterConstants.CHARACTER_EMPTY_STR;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_VALUES_COUNT;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.TABLE_SYN_END;
+import static io.mykit.db.common.utils.DbUtil.qr;
 import static io.mykit.db.common.utils.StringUtils.getListByStringSplit;
 
 
@@ -442,4 +446,40 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
             executeSQL(delSql,inConn);
         }
     }
+
+    @Override
+    public Integer insertOrUpdateSSS(Connection inConn, Connection outConn){
+        List<String> netids =null;
+        if(inConn!=null){
+            try {
+                String sql = MykitDbSyncConstants.getSqlTestConnection(MykitDbSyncConstants.TABLE_LF_CTRL_NET,MykitDbSyncConstants.FIEL_NEIID);
+                netids = qr.query(inConn,sql,new ColumnListHandler<>(1));
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        //正常运行
+        if(netids!=null&&netids.size()>0){
+            //保存备调表
+        }else{
+            //主调宕机
+            //更新或者保存备调表
+        }
+        return null;
+    }
+
+    @Override
+    public SynServerStatus getLastSynServerStatus(Connection outConn) {
+        try {
+            String sql = MykitDbSyncConstants.getMaxEntityFromTable(MykitDbSyncConstants.TABLE_SYN_SERVER_STATUS,MykitDbSyncConstants.FIEL_ID);
+            return qr.query(outConn,sql,new BeanHandler<>(SynServerStatus.class));
+
+        }catch (Exception e){
+                this.logger.error("查询备调最新服务器状态失败");
+                this.logger.error("异常为"+e.getMessage());
+        }
+        return null;
+    }
+
+
 }

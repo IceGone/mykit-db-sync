@@ -53,6 +53,7 @@ public class DBSyncBuilder extends BaseBuilder {
     private DBInfo destDb;
     private List<JobInfo> jobList;
     private String code;
+    private String env;
 
     private DBSyncBuilder(){
     }
@@ -96,6 +97,7 @@ public class DBSyncBuilder extends BaseBuilder {
             elementInObject(src, srcDb);
             elementInObject(dest, destDb);
             code = root.element(MykitDbSyncConstants.NODE_CODE).getTextTrim();
+            env = root.element(MykitDbSyncConstants.NODE_ENV).getTextTrim();
         } catch (Exception e) {
             e.printStackTrace();
             throw new MykitDbSyncException(e.getMessage());
@@ -118,6 +120,7 @@ public class DBSyncBuilder extends BaseBuilder {
                 job.getJobDataMap().put(MykitDbSyncConstants.DEST_DB, destDb);
                 job.getJobDataMap().put(MykitDbSyncConstants.JOB_INFO, jobInfo);
                 job.getJobDataMap().put(MykitDbSyncConstants.LOG_TITLE, logTitle);
+                job.getJobDataMap().put(MykitDbSyncConstants.NODE_ENV, env);
                 logger.info(jobInfo.getCron());
                 CronTrigger trigger = newTrigger().withIdentity(MykitDbSyncConstants.TRIGGER_PREFIX.concat(jobInfo.getJobId()+""), code).withSchedule(cronSchedule(jobInfo.getCron())).build();
                 sched.scheduleJob(job, trigger);

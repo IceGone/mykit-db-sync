@@ -15,6 +15,7 @@
  */
 package io.mykit.db.transfer.sync.impl;
 
+import io.mykit.db.common.entity.SynServerStatus;
 import io.mykit.db.transfer.entity.JobInfo;
 import io.mykit.db.transfer.sync.DBSync;
 import org.slf4j.Logger;
@@ -98,5 +99,15 @@ public class SQLServerSync extends AbstractDBSync implements DBSync {
     @Override
     public void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn, Connection outConn) throws SQLException {
 
+    }
+
+    @Override
+    public Integer insertOrUpdateSSS(Connection inConn, Connection outConn) {
+        return null;
+    }
+
+    @Override
+    public SynServerStatus getLastSynServerStatus(Connection outConn) {
+        return null;
     }
 }
