@@ -1,18 +1,3 @@
-/**
- * Copyright 2018-2118 the original author or authors.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.mykit.db.transfer.sync;
 
 
@@ -25,7 +10,6 @@ import java.util.List;
 
 /**
  * @description 数据库同步接口
- * @version 1.0.0
  */
 public interface DBSync {
 
@@ -96,7 +80,7 @@ public interface DBSync {
     * @Author: bjchen
     * @Date: 2021/4/29
     */
-    Integer insertOrUpdateSSS(Connection inConn, Connection outConn);
+    Integer insertOrUpdateSSS(Connection inConn, Connection outConn, SynServerStatus lastSynServerStatus) throws SQLException;
 
     /***
     * @Description: 获取备调 syn_server_status 表的最新状态
@@ -105,7 +89,7 @@ public interface DBSync {
     * @Author: bjchen
     * @Date: 2021/4/29
     */
-    SynServerStatus getLastSynServerStatus(Connection outConn);
+    SynServerStatus getLastSynServerStatus(Connection outConn) throws SQLException;
 
 
 }

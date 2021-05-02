@@ -1,6 +1,5 @@
 package io.mykit.db.transfer.conf;
 
-import io.mykit.db.common.constants.MykitDbSyncConstants;
 import io.mykit.db.transfer.entity.JobInfo;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;

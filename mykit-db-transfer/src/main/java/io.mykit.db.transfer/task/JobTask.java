@@ -1,18 +1,3 @@
-/**
- * Copyright 2018-2118 the original author or authors.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.mykit.db.transfer.task;
 
 import io.mykit.db.common.constants.MykitDbSyncConstants;
@@ -38,7 +23,6 @@ import java.util.List;
 
 /**
  * @description 同步数据库任务的具体实现
- * @version 1.0.0
  */
 public class JobTask extends DbConnection implements Job {
     private final Logger logger = LoggerFactory.getLogger(JobTask.class);
@@ -64,13 +48,16 @@ public class JobTask extends DbConnection implements Job {
         DBSync dbHelper = DBSyncFactory.create(destDb.getDbtype());
 
         try {
+            //运行环境为主调
             if(MykitDbSyncConstants.NODE_ENV_0.equals(env)){
                 inConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
                 outConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
-                //获取主调运行的最新状态
+                //从备调数据库的 syn_server_status 获取主调运行的最新状态
                 SynServerStatus lastSynServerStatus = dbHelper.getLastSynServerStatus(outConn);
                 // 根据主调运行状态 保存 备调的 syn_server_status 表
-                serverStatus = dbHelper.insertOrUpdateSSS(inConn,outConn);
+                if(null!=lastSynServerStatus){
+                    serverStatus = dbHelper.insertOrUpdateSSS(inConn,outConn,lastSynServerStatus);
+                }
 
                 //主调正常
 

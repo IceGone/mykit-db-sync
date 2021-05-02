@@ -1,18 +1,3 @@
-/**
- * Copyright 2018-2118 the original author or authors.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.mykit.db.transfer.sync.impl;
 
 import io.mykit.db.common.constants.MykitDbSyncConstants;
@@ -32,8 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static io.mykit.db.common.constants.CharacterConstants.CHARACTER_1;
-import static io.mykit.db.common.constants.CharacterConstants.CHARACTER_EMPTY_STR;
+import static io.mykit.db.common.constants.CharacterConstants.*;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_VALUES_COUNT;
 import static io.mykit.db.common.constants.MykitDbSyncConstants.TABLE_SYN_END;
 import static io.mykit.db.common.utils.DbUtil.qr;
@@ -42,7 +26,6 @@ import static io.mykit.db.common.utils.StringUtils.getListByStringSplit;
 
 /**
  * @description MySQL数据库同步实现
- * @version 1.0.0
  */
 public class MySQLSync extends AbstractDBSync implements DBSync {
     private Logger logger = LoggerFactory.getLogger(MySQLSync.class);
@@ -448,31 +431,45 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
-    public Integer insertOrUpdateSSS(Connection inConn, Connection outConn){
+    public Integer insertOrUpdateSSS(Connection inConn, Connection outConn, SynServerStatus lsss) throws SQLException{
         List<String> netids =null;
+        String sql ="";
+
         if(inConn!=null){
             try {
-                String sql = MykitDbSyncConstants.getSqlTestConnection(MykitDbSyncConstants.TABLE_LF_CTRL_NET,MykitDbSyncConstants.FIEL_NEIID);
+               sql = MykitDbSyncConstants.getSqlTestConnection(MykitDbSyncConstants.TABLE_LF_CTRL_NET,MykitDbSyncConstants.FIEL_NEIID);
                 netids = qr.query(inConn,sql,new ColumnListHandler<>(1));
             } catch (SQLException e) {
                 e.printStackTrace();
             }
+
+            //正常运行(包括恢复正常)
+            if(netids!=null&&netids.size()>0){
+                sql = MykitDbSyncConstants.getSqlSavelive(lsss.getIslive(),lsss.getId());
+                executeSQL(sql,outConn);
+                return MykitDbSyncConstants.SERVER_ISLIVE_0 ;
+
+            }else {
+                //主机宕机
+                sql = MykitDbSyncConstants.getSqlSaveDown(MykitDbSyncConstants.SERVER_ISLIVE_1,lsss.getId());
+                executeSQL(sql,outConn);
+                return MykitDbSyncConstants.SERVER_ISLIVE_1 ;
+            }
         }
-        //正常运行
-        if(netids!=null&&netids.size()>0){
-            //保存备调表
-        }else{
-            //主调宕机
-            //更新或者保存备调表
+        //主调 宕机
+        if (inConn ==null){
+            sql = MykitDbSyncConstants.getSqlSaveDown(MykitDbSyncConstants.SERVER_ISLIVE_1,lsss.getId());
+            executeSQL(sql,outConn);
+            return MykitDbSyncConstants.SERVER_ISLIVE_1 ;
         }
         return null;
     }
 
     @Override
-    public SynServerStatus getLastSynServerStatus(Connection outConn) {
+    public SynServerStatus getLastSynServerStatus(Connection outConn) throws SQLException{
         try {
-            String sql = MykitDbSyncConstants.getMaxEntityFromTable(MykitDbSyncConstants.TABLE_SYN_SERVER_STATUS,MykitDbSyncConstants.FIEL_ID);
-            return qr.query(outConn,sql,new BeanHandler<>(SynServerStatus.class));
+            String sql = MykitDbSyncConstants.getMaxEntityFromTable(MykitDbSyncConstants.TABLE_SYN_SERVER_STATUS,MykitDbSyncConstants.FIEL_ID,MykitDbSyncConstants.SQL_SELECT_LIMIT_1);
+            return qr.query(outConn,sql,new BeanHandler<SynServerStatus>(SynServerStatus.class));
 
         }catch (Exception e){
                 this.logger.error("查询备调最新服务器状态失败");
