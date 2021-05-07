@@ -24,6 +24,8 @@ public class JobInfo extends BaseJobInfo {
     private String destTableUpdate;
     //更新 同步配置表 如lf_his_96lc_syn 所使用的sql
     private String relateSynSql;
+    // 需要同步的天数
+    private Integer syncount;
 
     public String getRelateSynSql() {
         return relateSynSql;
@@ -88,4 +90,9 @@ public class JobInfo extends BaseJobInfo {
     public void setSrcSqlDel(String srcSqlDel) {
         this.srcSqlDel = srcSqlDel;
     }
+
+    public Integer getSyncount() { return syncount; }
+
+    public void setSyncount(Integer syncount) { this.syncount = syncount;}
 }
+

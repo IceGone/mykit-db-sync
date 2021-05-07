@@ -1,6 +1,8 @@
 package io.mykit.db.common.constants;
 
 
+import java.sql.Timestamp;
+
 /**
  * @description 常量类
  */
@@ -10,6 +12,16 @@ public class MykitDbSyncConstants {
      * @Description: 同步时每几条数据执行一次
      */
     public static final Integer SQL_VALUES_COUNT =100;
+
+    /***
+     * @Description: 保存进 _syn 表：构建保存sql
+     */
+    public static final Integer OPEARATE_SAVE_0 =0;
+
+    /***
+     * @Description: 保存进 _syn 表：构建删除sql
+     */
+    public static final Integer OPEARATE_DEL_1 =1;
 
     /***
      * @Description: 表查询条数
@@ -201,15 +213,44 @@ public class MykitDbSyncConstants {
     }
 
     /***
-    * @Description: 获取同步表 距离系统时间 前后datediffCount天 的联合主键 数据
-    * @Param: [destTable, destTableKey, datediffCount]
+    * @Description: 根据主调运行状态更新同步表_syn 如 lf_his_96lc_syn
+    * @Param: [destTable, destTableKey, syncount, downtime, islive]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/5/2
+    */
+    public static String getSqlTablekey(String destTable,String destTableKey,int syncount,Timestamp downtime,int islive){
+        switch (islive){
+            case SERVER_ISLIVE_0 : return getSqlTablekeyAndLasttime(destTable,destTableKey,syncount);
+            case SERVER_ISLIVE_1 : return getSqlTablekeyAndLasttimeAfterDowntime(destTable,destTableKey,downtime);
+            default:return "";
+        }
+    }
+
+
+    /***
+    * @Description: 获取同步表(主机正常运行): 距离系统时间 前后syncount天 的联合主键 数据
+    * @Param: [destTable, destTableKey, syncount]
     * @return: java.lang.String
     * @Author: bjchen
     * @Date: 2021/4/27
     */
-    public static String getSqlTablekeyAndLasttime(String destTable,String destTableKey,int datediffCount){
-        return "select "+destTableKey+",LASTTIME from "+destTable +" where abs(datediff(LASTTIME,SYSDATE())) <='"+datediffCount+"'";
+    public static String getSqlTablekeyAndLasttime(String destTable,String destTableKey,int syncount){
+        return "select "+destTableKey+",LASTTIME from "+destTable +" where abs(datediff(LASTTIME,SYSDATE())) <='"+syncount+"'";
     }
+
+    /***
+    * @Description: 获取同步表(主机宕机): 在主机宕机时间之后的联合主键 数据
+    * @Param: [destTable, destTableKey, downtime]
+    * @return: java.lang.String
+    * @Author: bjchen
+    * @Date: 2021/5/2
+    */
+    public static String getSqlTablekeyAndLasttimeAfterDowntime(String destTable, String destTableKey, Timestamp downtime){
+        return "select "+destTableKey+",LASTTIME from "+destTable +" where LASTTIME >= '"+downtime+"'";
+    }
+
+
 
     /***
     * @Description: 表名 syn_server_status

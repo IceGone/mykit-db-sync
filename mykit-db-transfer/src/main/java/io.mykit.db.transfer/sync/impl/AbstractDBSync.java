@@ -2,6 +2,7 @@ package io.mykit.db.transfer.sync.impl;
 
 
 import io.mykit.db.common.constants.MykitDbSyncConstants;
+import io.mykit.db.common.entity.SynServerStatus;
 import io.mykit.db.common.exception.MykitDbSyncException;
 import io.mykit.db.common.utils.Tool;
 import io.mykit.db.transfer.entity.JobInfo;
@@ -9,10 +10,7 @@ import io.mykit.db.transfer.sync.DBSync;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 import static io.mykit.db.common.constants.MykitDbSyncConstants.SQL_VALUES_COUNT;
@@ -57,11 +55,11 @@ public abstract class AbstractDBSync implements DBSync {
     /***
     * @Description: 获取同步表的联合主键和时间:只获取当前时间的前后10天的数据
     */
-    protected Map<String,Date>getTableKeyAndlasttimeMap(JobInfo jobInfo, Connection conn) throws SQLException {
-        Map<String,Date>  tableKeyAndlasttimeMap =new HashMap<>(2^12);
+    protected Map<String, Timestamp>getTableKeyAndlasttimeMap(JobInfo jobInfo, SynServerStatus lsss, Connection conn) throws SQLException {
+        Map<String,Timestamp>  tableKeyAndlasttimeMap =new HashMap<>(2^12);
         List<String> destTableKeyList = getListByStringSplit(jobInfo.getDestTableKey(), "\\,");
         int dtkSize = destTableKeyList.size();
-        String sql = MykitDbSyncConstants.getSqlTablekeyAndLasttime(jobInfo.getDestTable(),jobInfo.getDestTableKey(),3);
+        String sql = MykitDbSyncConstants.getSqlTablekey (jobInfo.getDestTable(),jobInfo.getDestTableKey(),jobInfo.getSyncount(),lsss.getDowntime(),lsss.getIslive());
         PreparedStatement psm =null;
         ResultSet rs =null;
         StringBuilder tableKey =null;
@@ -74,15 +72,15 @@ public abstract class AbstractDBSync implements DBSync {
                 for (int i=0; i<dtkSize;++i){
                     tableKey.append("'").append(i==dtkSize-1?rs.getObject(destTableKeyList.get(i))+"'":rs.getObject(destTableKeyList.get(i))+"',");
                 }
-                tableKeyAndlasttimeMap.put(tableKey.toString(),rs.getDate("LASTTIME"));
+                tableKeyAndlasttimeMap.put(tableKey.toString(),rs.getTimestamp("LASTTIME"));
             }
 
         }catch (Exception e){
             logger.error("获取同步表的联合主键和时间失败！"+e.getMessage());
         }finally {
             psm.close();
+            return tableKeyAndlasttimeMap;
         }
-        return tableKeyAndlasttimeMap;
     }
 
     /***
@@ -92,7 +90,7 @@ public abstract class AbstractDBSync implements DBSync {
     * @Author: bjchen
     * @Date: 2021/4/27
     */
-    protected List<String> getExecuteSqls(int opearate,Map<String, Date> sMap, JobInfo jobInfo) {
+    protected List<String> getExecuteSqls(SynServerStatus lsss, int opearate, Map<String, Timestamp> sMap, JobInfo jobInfo) {
         List<String> executeSqls =new ArrayList<>(2^4);
         String uniqueName = Tool.generateString(6) + "_" + jobInfo.getJobId();
         String key="";
@@ -115,7 +113,7 @@ public abstract class AbstractDBSync implements DBSync {
             for(Iterator<String> it=sMap.keySet().iterator();it.hasNext();){
                 key =it.next();
                 sql.append("('").append(jobInfo.getJobId()).append("',").append(key).append(",").append("SYSDATE()").append(",").append("NULL").append(",'")
-                        .append(type).append("','").append(opearate).append("','").append(syncount).append("','").append(synstatus).append("'),");
+                        .append(lsss.getIslive()).append("','").append(opearate).append("','").append(syncount).append("','").append(synstatus).append("'),");
 
                 count++;
 
@@ -143,7 +141,7 @@ public abstract class AbstractDBSync implements DBSync {
     * @Author: bjchen
     * @Date: 2021/4/27
     */
-    protected String getDelSql(Map<String, Date> dMap, JobInfo jobInfo) {
+    protected String getDelSql(Map<String, Timestamp> dMap, JobInfo jobInfo) {
         if (dMap != null && dMap.size() > 0) {
             StringBuilder sql = new StringBuilder();
             String key="";

@@ -36,8 +36,7 @@ public class JobTask extends DbConnection implements Job {
         this.logger.info("开始任务调度: {}", DateUtils.parseDateToString(new Date(), DateUtils.DATE_TIME_FORMAT));
         Connection inConn = null;
         Connection outConn = null;
-        //主服务器状态，默认正常运行
-        int serverStatus =0;
+        SynServerStatus lsss = null;
         JobDataMap data = context.getJobDetail().getJobDataMap();
         DBInfo srcDb = (DBInfo) data.get(MykitDbSyncConstants.SRC_DB);
         DBInfo destDb = (DBInfo) data.get(MykitDbSyncConstants.DEST_DB);
@@ -48,51 +47,25 @@ public class JobTask extends DbConnection implements Job {
         DBSync dbHelper = DBSyncFactory.create(destDb.getDbtype());
 
         try {
-            //运行环境为主调
-            if(MykitDbSyncConstants.NODE_ENV_0.equals(env)){
-                inConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
-                outConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
-                //从备调数据库的 syn_server_status 获取主调运行的最新状态
-                SynServerStatus lastSynServerStatus = dbHelper.getLastSynServerStatus(outConn);
-                // 根据主调运行状态 保存 备调的 syn_server_status 表
-                if(null!=lastSynServerStatus){
-                    serverStatus = dbHelper.insertOrUpdateSSS(inConn,outConn,lastSynServerStatus);
-                }
+            inConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
+            outConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
+            //从备调数据库的 syn_server_status 获取主调运行的最新状态
+            lsss = dbHelper.insertOrUpdateSSS(inConn,outConn);
 
-                //主调正常
-
-                //主备切换
-            }else if(MykitDbSyncConstants.NODE_ENV_1.equals(env)){
-                inConn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
-                outConn = getConnection(MykitDbSyncConstants.TYPE_SOURCE, srcDb);
-            }
-
-            if (inConn == null) {
-                this.logger.error("请检查源数据连接!");
-                throw new MykitDbSyncException("请检查源数据连接!");
-            } else if (outConn == null) {
-                this.logger.error("请检查目标数据连接!");
-                throw new MykitDbSyncException("请检查目标数据连接!");
-            }
             long start = System.currentTimeMillis();
             //组装SQL前，先更新_syn表 如 lf_his_96lc_syn
-            dbHelper.executeUpdateTableSyn(jobInfo,inConn,outConn);
+            //需要处理 主调同步表_syn操作
+            if(lsss.getIslive()==MykitDbSyncConstants.SERVER_ISLIVE_0){
+                dbHelper.executeUpdateTableSyn(jobInfo,lsss,inConn,outConn);
+            }
+            if(lsss.getIslive()==MykitDbSyncConstants.SERVER_ISLIVE_1){
+                dbHelper.executeUpdateTableSynReverse(jobInfo,lsss,inConn,outConn);
+            }
+            //备调优先同步到主调
+            dbHelper.executeSQL(outConn,inConn,jobInfo,MykitDbSyncConstants.NODE_ENV_1);
+            //主调同步到备调
+            dbHelper.executeSQL(inConn,outConn,jobInfo,MykitDbSyncConstants.NODE_ENV_0);
 
-            List<String> sql = dbHelper.assembleSaveSQL(jobInfo.getSrcSql(), inConn, jobInfo);
-            List<String> sqlDel = dbHelper.assembleDelSQL(jobInfo.getSrcSqlDel(), inConn, jobInfo);
-            this.logger.info("组装SQL耗时: " + (System.currentTimeMillis() - start) + "ms");
-            if (sql != null&&sql.size()>2) {
-                this.logger.debug(sql.toString());
-                long eStart = System.currentTimeMillis();
-                dbHelper.executeSQL(sql, inConn,outConn);
-                this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
-            }
-            if (sql != null&&sqlDel.size()>2) {
-                this.logger.debug(sqlDel.toString());
-                long eStart = System.currentTimeMillis();
-                dbHelper.executeSQL(sqlDel, inConn,outConn);
-                this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
-            }
         } catch (SQLException e) {
             this.logger.error(logTitle + e.getMessage());
             this.logger.error(logTitle + " SQL执行出错，请检查是否存在语法错误");

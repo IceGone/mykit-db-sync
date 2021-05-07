@@ -45,6 +45,7 @@
             <destTableFields>*</destTableFields>
             <destTableKey>id</destTableKey>
             <destTableUpdate>*</destTableUpdate>
+            <syncount>10</syncount>
         </job>
     </jobs>
 </root>

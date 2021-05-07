@@ -11,10 +11,7 @@ import org.apache.commons.dbutils.handlers.ColumnListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 import static io.mykit.db.common.constants.CharacterConstants.*;
@@ -31,7 +28,27 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
     private Logger logger = LoggerFactory.getLogger(MySQLSync.class);
 
     @Override
-    public List<String> assembleSaveSQL(String srcSql, Connection conn, JobInfo jobInfo) throws SQLException {
+    public void executeSQL(Connection inConn, Connection outConn, JobInfo jobInfo, String env) throws SQLException{
+        long start = System.currentTimeMillis();
+        List<String> sql = this.assembleSaveSQL(jobInfo.getSrcSql(), inConn, jobInfo,env);
+        List<String> sqlDel = this.assembleDelSQL(jobInfo.getSrcSqlDel(), inConn, jobInfo,env);
+        this.logger.info("组装SQL耗时: " + (System.currentTimeMillis() -start ) + "ms");
+        if (sql != null&&sql.size()>2) {
+            this.logger.debug(sql.toString());
+            long eStart = System.currentTimeMillis();
+            this.executeSQL(sql,inConn,outConn);
+            this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
+        }
+        if (sql != null&&sqlDel.size()>2) {
+            this.logger.debug(sqlDel.toString());
+            long eStart = System.currentTimeMillis();
+            this.executeSQL(sqlDel,inConn,outConn);
+            this.logger.info("执行SQL语句耗时: " + (System.currentTimeMillis() - eStart) + "ms");
+        }
+    }
+
+    @Override
+    public List<String> assembleSaveSQL(String srcSql, Connection conn, JobInfo jobInfo,String env) throws SQLException {
         String uniqueName = Tool.generateString(6) + "_" + jobInfo.getJobId();
         String[] destFields = jobInfo.getDestTableFields().split(MykitDbSyncConstants.FIELD_SPLIT);
         destFields = this.trimArrayItem(destFields);
@@ -48,6 +65,8 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         String destTableKey = jobInfo.getDestTableKey();
         List<String> destTableKeyList = getListByStringSplit(destTableKey,"\\,");
         PreparedStatement pst = conn.prepareStatement(srcSql);
+        //同步方向：主调->备调 0 ,备调->主调 1
+        pst.setString(1,env);
         ResultSet rs = pst.executeQuery();
         StringBuilder sqlSave = new StringBuilder();
         StringBuilder sqlSaveHead = new StringBuilder("insert into ").append(destTable).append(" (").append(jobInfo.getDestTableFields()).append(") values ");
@@ -122,7 +141,7 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
-    public List<String> assembleDelSQL(String srcSql, Connection conn, JobInfo jobInfo) throws SQLException {
+    public List<String> assembleDelSQL(String srcSql, Connection conn, JobInfo jobInfo,String env) throws SQLException {
         String uniqueName = Tool.generateString(6) + "_" + jobInfo.getJobId();
         String[] destFields = jobInfo.getDestTableFields().split(MykitDbSyncConstants.FIELD_SPLIT);
         destFields = this.trimArrayItem(destFields);
@@ -137,6 +156,8 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         String destTableKey = jobInfo.getDestTableKey();
         List<String> destTableKeyList = getListByStringSplit(destTableKey,"\\,");
         PreparedStatement pst = conn.prepareStatement(srcSql);
+        //同步方向：主调->备调 0 ,备调->主调 1
+        pst.setString(1,env);
         ResultSet rs = pst.executeQuery();
         StringBuilder sqlDel = new StringBuilder();
         StringBuilder sqlDelHead = new StringBuilder("delete from ").append(destTable).append(" where (").append(destTableKey).append(") in (");
@@ -315,6 +336,7 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         pst.close();
     }
 
+    @Override
     public void executeSQL(List<String> sqls, Connection conn) throws SQLException {
         PreparedStatement pst = conn.prepareStatement("");
         for(String sql:sqls){
@@ -390,11 +412,12 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
-    public void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn, Connection outConn) throws SQLException {
+    public void executeUpdateTableSyn(JobInfo jobInfo, SynServerStatus lsss, Connection inConn, Connection outConn) throws SQLException {
+        //区分主备库
         //获取 主库日期内数据 (处理后作为insert or update)
-        Map<String, Date> sMap =getTableKeyAndlasttimeMap(jobInfo,inConn);
+        Map<String, Timestamp> sMap =getTableKeyAndlasttimeMap(jobInfo,lsss,inConn);
         //获取 备库日期内数据 (处理后作为delete)
-        Map<String, Date> dMap =getTableKeyAndlasttimeMap(jobInfo,outConn);
+        Map<String, Timestamp> dMap =getTableKeyAndlasttimeMap(jobInfo,lsss,outConn);
 
         // insert or update 用 sMap
         String key="";
@@ -412,13 +435,11 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
                 dMap.remove(key);
             }
         }
-        int opearateSave =0;
-        int opearateDel =1;
         //保存数据入 同步表对应的 _syn 表
         //OPEARATE =0 （后续执行insert or update）
-        List<String> saveSql = getExecuteSqls(opearateSave,sMap, jobInfo);
+        List<String> saveSql = getExecuteSqls(lsss,MykitDbSyncConstants.OPEARATE_SAVE_0,sMap, jobInfo);
         //OPEARATE =1 （后续执行 目标表的 delete）
-        List<String> delSql = getExecuteSqls(opearateDel,dMap, jobInfo);
+        List<String> delSql = getExecuteSqls(lsss,MykitDbSyncConstants.OPEARATE_DEL_1,dMap, jobInfo);
         //执行sql
         if( saveSql!=null && saveSql.size()>0 ){
             this.logger.debug(saveSql.toString());
@@ -431,7 +452,29 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
-    public Integer insertOrUpdateSSS(Connection inConn, Connection outConn, SynServerStatus lsss) throws SQLException{
+    public void executeUpdateTableSynReverse(JobInfo jobInfo, SynServerStatus lsss, Connection inConn, Connection outConn) throws SQLException {
+        //区分主备库
+        //获取 主库日期内数据 (处理后作为insert or update)
+        Map<String, Timestamp> sMap =getTableKeyAndlasttimeMap(jobInfo,lsss,outConn);
+
+        //保存数据入 同步表对应的 _syn 表
+        //OPEARATE =0 （后续执行insert or update）
+        List<String> saveSql = getExecuteSqls(lsss,MykitDbSyncConstants.OPEARATE_SAVE_0,sMap, jobInfo);
+        //执行sql
+        if( saveSql!=null && saveSql.size()>0 ){
+            this.logger.debug(saveSql.toString());
+            executeSQL(saveSql,outConn);
+        }
+    }
+
+    @Override
+    public SynServerStatus insertOrUpdateSSS(Connection inConn, Connection outConn ) throws SQLException{
+        SynServerStatus lsss = null;
+        //获取上一次服务器状态
+        if(outConn!=null){
+            lsss = getLastSynServerStatus(outConn);
+        }
+
         List<String> netids =null;
         String sql ="";
 
@@ -447,21 +490,22 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
             if(netids!=null&&netids.size()>0){
                 sql = MykitDbSyncConstants.getSqlSavelive(lsss.getIslive(),lsss.getId());
                 executeSQL(sql,outConn);
-                return MykitDbSyncConstants.SERVER_ISLIVE_0 ;
+                return getLastSynServerStatus(outConn) ;
 
             }else {
                 //主机宕机
                 sql = MykitDbSyncConstants.getSqlSaveDown(MykitDbSyncConstants.SERVER_ISLIVE_1,lsss.getId());
                 executeSQL(sql,outConn);
-                return MykitDbSyncConstants.SERVER_ISLIVE_1 ;
+                return getLastSynServerStatus(outConn) ;
             }
         }
         //主调 宕机
         if (inConn ==null){
             sql = MykitDbSyncConstants.getSqlSaveDown(MykitDbSyncConstants.SERVER_ISLIVE_1,lsss.getId());
             executeSQL(sql,outConn);
-            return MykitDbSyncConstants.SERVER_ISLIVE_1 ;
+            return getLastSynServerStatus(outConn) ;
         }
+
         return null;
     }
 
@@ -477,6 +521,5 @@ public class MySQLSync extends AbstractDBSync implements DBSync {
         }
         return null;
     }
-
 
 }

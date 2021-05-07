@@ -1,5 +1,6 @@
 package io.mykit.db.transfer.conf;
 
+import io.mykit.db.common.constants.MykitDbSyncConstants;
 import io.mykit.db.transfer.entity.JobInfo;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
@@ -43,7 +44,8 @@ public class DbConfType extends AbstractConfType {
         String sql = "select * from syn_job_conf";
         Connection conn =null;
         try {
-            conn = getConnectionByEnv();
+            // 从备调
+            conn = getConnection(MykitDbSyncConstants.TYPE_DEST, destDb);
             jobList= qr.query(conn,sql,new BeanListHandler<JobInfo>(JobInfo.class));
         }catch (Exception e){
             logger.error("获取数据库连接失败");

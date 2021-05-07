@@ -31,6 +31,12 @@ public class SynJobConf extends BaseSyn {
    * @Description:目标数据表字段(默认为所有字段)
    */
   private String desttablefields;
+
+  /***
+   * @Description:同步天数
+   */
+  private Integer syncount;
+
   public long getJobid() {
     return jobid;
   }
@@ -91,5 +97,13 @@ public class SynJobConf extends BaseSyn {
 
   public void setDesttablefields(String desttablefields) {
     this.desttablefields = desttablefields;
+  }
+
+  public Integer getSyncount() {
+    return syncount;
+  }
+
+  public void setSyncount(Integer syncount) {
+    this.syncount = syncount;
   }
 }

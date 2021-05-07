@@ -23,6 +23,11 @@ public class OracleSync extends AbstractDBSync implements DBSync {
     private Logger logger = LoggerFactory.getLogger(OracleSync.class);
 
     @Override
+    public void executeSQL(Connection inConn, Connection outConn, JobInfo jobInfo, String env) throws SQLException {
+
+    }
+
+    @Override
     public String assembleSQL(String srcSql, Connection conn, JobInfo jobInfo) throws SQLException {
         String[] destFields = jobInfo.getDestTableFields().split(",");
         destFields = this.trimArrayItem(destFields);
@@ -98,12 +103,12 @@ public class OracleSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
-    public List<String> assembleSaveSQL(String paramString, Connection paramConnection, JobInfo paramJobInfo) throws SQLException {
+    public List<String> assembleSaveSQL(String paramString, Connection paramConnection, JobInfo paramJobInfo,String env) throws SQLException {
         return null;
     }
 
     @Override
-    public List<String> assembleDelSQL(String paramString, Connection paramConnection, JobInfo paramJobInfo) throws SQLException {
+    public List<String> assembleDelSQL(String paramString, Connection paramConnection, JobInfo paramJobInfo,String env) throws SQLException {
         return null;
     }
 
@@ -126,12 +131,22 @@ public class OracleSync extends AbstractDBSync implements DBSync {
     }
 
     @Override
-    public void executeUpdateTableSyn(JobInfo jobInfo, Connection inConn, Connection outConn) throws SQLException {
+    public void executeSQL(List<String> sql, Connection conn) throws SQLException {
 
     }
 
     @Override
-    public Integer insertOrUpdateSSS(Connection inConn, Connection outConn, SynServerStatus lastSynServerStatus) throws SQLException {
+    public void executeUpdateTableSyn(JobInfo jobInfo, SynServerStatus lsss, Connection inConn, Connection outConn) throws SQLException {
+
+    }
+
+    @Override
+    public void executeUpdateTableSynReverse(JobInfo jobInfo, SynServerStatus lsss, Connection inConn, Connection outConn) throws SQLException {
+
+    }
+
+    @Override
+    public SynServerStatus insertOrUpdateSSS(Connection inConn, Connection outConn) throws SQLException {
         return null;
     }
 

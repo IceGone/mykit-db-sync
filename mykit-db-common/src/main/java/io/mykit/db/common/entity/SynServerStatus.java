@@ -1,7 +1,7 @@
 package io.mykit.db.common.entity;
 
 
-import java.util.Date;
+import java.sql.Timestamp;
 
 public class SynServerStatus {
 
@@ -12,15 +12,15 @@ public class SynServerStatus {
   /***
    * @Description:创建islive时间(主库维护)
    */
-  private Date createtime;
+  private Timestamp createtime;
   /***
   * @Description:更新islive时间(主库维护)
   */
-  private Date updatetime;
+  private Timestamp updatetime;
   /***
    * @Description:主库宕机时间(备库维护)
    */
-  private Date downtime;
+  private Timestamp downtime;
   /***
    * @Description:主机状态(主备调维护 0：运行，1：宕机)
    */
@@ -37,27 +37,27 @@ public class SynServerStatus {
         this.id = id;
     }
 
-    public Date getCreatetime() {
+    public Timestamp getCreatetime() {
         return createtime;
     }
 
-    public void setCreatetime(Date createtime) {
+    public void setCreatetime(Timestamp createtime) {
         this.createtime = createtime;
     }
 
-    public Date getUpdatetime() {
+    public Timestamp getUpdatetime() {
         return updatetime;
     }
 
-    public void setUpdatetime(Date updatetime) {
+    public void setUpdatetime(Timestamp updatetime) {
         this.updatetime = updatetime;
     }
 
-    public Date getDowntime() {
+    public Timestamp getDowntime() {
         return downtime;
     }
 
-    public void setDowntime(Date downtime) {
+    public void setDowntime(Timestamp downtime) {
         this.downtime = downtime;
     }
 
